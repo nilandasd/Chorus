@@ -2,7 +2,7 @@ use crate::grammar::NT;
 
 struct Item<'a> {
   head: NT,
-  body: &'a [Symbol] 
+  body: &'a [Symbol],
   la: Symbol
 }
 
