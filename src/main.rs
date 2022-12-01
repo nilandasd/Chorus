@@ -1,5 +1,6 @@
 mod lex;
 mod grammar;
+mod parser;
 use std::fs::File;
 
 fn main() -> std::io::Result<()> {

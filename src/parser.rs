@@ -1,4 +1,5 @@
 use crate::grammar::NT;
+use crate::grammar::Symbol;
 
 struct Item<'a> {
   head: NT,
@@ -8,29 +9,30 @@ struct Item<'a> {
 
 struct State<'a> {
   id: u8,
-  body: &'a [Item]
+  items: &'a [Item]
 }
 
 impl Item {
-  fn compare(self, i: &Item) -> bool {
-    10
-  }
-
-  fn postfix(self) -> Item {
-    10
+  fn postfix(self) -> &[Symbol] {
+    
   }
 
   fn expects(self) -> Symbol {
+    let iter = self.body.iter();
 
+    for symbol in iter {
+      match symbol {
+        Cursor => {
+          if let Some(s) = iter.next() {
+            return s
+          } else {
+            return None
+          }
+        }
+        _ => {}
+      }
+    }
+
+    return None
   }
 }
-
-struct SLR {
-
-}
-
-struct LALR {
-
-}
-
-

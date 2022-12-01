@@ -1,12 +1,12 @@
 use crate::lex::TID;
 
 // Non-Terminal
-enum NT {
+pub enum NT {
   Stmts, Stmt, Decl, ArrIndex, Type, ClosedStmt, Block, Expr, LV, RV, Params,
   ReturnType, Args, ParamsList, ArgsList
 }
 
-enum Symbol {
+pub enum Symbol {
   Term(TID),
   NonTerm(NT),
   Cursor,
