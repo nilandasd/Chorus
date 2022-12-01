@@ -20,7 +20,7 @@ pub enum Token {
 }
 
 // Token ID
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum TID {
   // -- ATTR TOKENS --- 
   Var, Int, Float, Char, String, Op, Type,
@@ -116,22 +116,22 @@ impl Lex {
 
       match char {
         Some(c) => {
-          if white_space(c) {
+          if c.is_ascii_whitespace() {
             continue;
 
-          } else if comment(c) {
+          } else if c == b'#' {
             self.skip_line();
 
-          } else if letter(c) {
+          } else if c.is_ascii_alphabetic() {
             self.read_word(c); 
 
-          } else if number(c) {
+          } else if c.is_ascii_digit() {
             self.read_num(c); 
 
-          } else if single_quote(c) {
+          } else if c == b'\'' {
             self.read_char();
 
-          } else if double_quote(c) {
+          } else if c == b'"' {
             self.read_string();
 
           } else if op(c) {
@@ -392,32 +392,8 @@ fn peek_required(c: u8) -> bool {
   (c == b'=') || (c == b'<') || (c == b'>')
 }
 
-fn letter(c: u8) -> bool {
-  ((65 <= c) && (c <= 90)) || ((97 <= c) && (c <= 122))
-}
-
-fn number(c: u8) -> bool {
-  (48 <= c) && (c <= 57)
-}
-
-fn single_quote(c: u8) -> bool {
-  c == b'\''
-}
-
-fn double_quote(c: u8) -> bool {
-  c == b'"'
-}
-
 fn new_line(c: u8) -> bool {
-  c == 10
-}
-
-fn white_space(c: u8) -> bool {
-  (c == 32) || (c == 9) || (c == 10)
-}
-
-fn comment(c: u8) -> bool {
-  c == b'#'
+  c == b'\n'
 }
 
 // ============================================================================

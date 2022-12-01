@@ -1,11 +1,13 @@
 use crate::lex::TID;
 
 // Non-Terminal
+#[derive(Clone, PartialEq, Eq)]
 pub enum NT {
   Stmts, Stmt, Decl, ArrIndex, Type, ClosedStmt, Block, Expr, LV, RV, Params,
   ReturnType, Args, ParamsList, ArgsList
 }
 
+#[derive(Clone, PartialEq, Eq)]
 pub enum Symbol {
   Term(TID),
   NonTerm(NT),
