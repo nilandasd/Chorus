@@ -1,6 +1,6 @@
 pub type TokID = usize;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Tok {
     Var,
     Int,
@@ -9,6 +9,7 @@ pub enum Tok {
     // key words
     FnKW,
     LetKW,
+    IfKW,
 
     // one char terms
     LeftCurly,
@@ -39,45 +40,77 @@ pub enum Tok {
 
 }
 
-pub fn keyword_check(word: &str) -> Option<TokID> {
+pub fn keyword_check(word: &str) -> Option<Tok> {
     match word {
-        "fn" => Some(Tok::FnKW as TokID),
-        "let" => Some(Tok::LetKW as TokID),
+        "fn" => Some(Tok::FnKW),
+        "if" => Some(Tok::IfKW),
         _ => None,
     }
 }
 
-pub fn tid_to_token(tid: TokID) -> Tok {
+pub fn tid_to_tok(tid: TokID) -> Tok {
     match tid {
         0 =>  Tok::Var,
         1 =>  Tok::Int,
         2 =>  Tok::String,
         3 =>  Tok::FnKW,
         4 =>  Tok::LetKW,
-        5 =>  Tok::LeftCurly,
-        6 =>  Tok::RightCurly,
-        7 =>  Tok::LeftParen,
-        8 =>  Tok::RightParen,
-        9 =>  Tok::SemiColon,
-        10 => Tok::Comma,
-        11 => Tok::Eq,
-        12 => Tok::Plus,
-        13 => Tok::End,
-        14 => Tok::Start,
-        15 => Tok::Stmts,
-        16 => Tok::Stmt,
-        17 => Tok::FuncCall,
-        18 => Tok::FuncDecl,
-        19 => Tok::ExprStmt,
-        20 => Tok::StmtDecl,
-        21 => Tok::ExprList,
-        22 => Tok::ArgList,
-        23 => Tok::Block,
-        24 => Tok::Expr,
-        25 => Tok::NestedExpr,
-        26 => Tok::BinExpr,
-        27 => Tok::Value,
-        28 => Tok::BinOp,
+        5 =>  Tok::IfKW,
+        6 =>  Tok::LeftCurly,
+        7 =>  Tok::RightCurly,
+        8 =>  Tok::LeftParen,
+        9 =>  Tok::RightParen,
+        10 =>  Tok::SemiColon,
+        11 => Tok::Comma,
+        12 => Tok::Eq,
+        13 => Tok::Plus,
+        14 => Tok::End,
+
+        // nonterms // im sexy and im sexy
+        15 => Tok::Start,
+        16 => Tok::Stmts,
+        17 => Tok::Stmt,
+        18 => Tok::FuncCall,
+        19 => Tok::FuncDecl,
+        20 => Tok::ExprStmt,
+        21 => Tok::StmtDecl,
+        22 => Tok::ExprList,
+        23 => Tok::ArgList,
+        24 => Tok::Block,
+        25 => Tok::Expr,
+        26 => Tok::NestedExpr,
+        27 => Tok::BinExpr,
+        28 => Tok::Value,
+        29 => Tok::BinOp,
         _ => panic!("Token does not exist")
     }
 }
+
+impl Tok {
+    pub fn non_semantic_token(&self) -> bool {
+        match self {
+            Tok::LeftCurly |
+            Tok::RightCurly |
+            Tok::LeftParen |
+            Tok::RightParen |
+            Tok::SemiColon |
+            Tok::Comma |
+            Tok::FnKW |
+            Tok::LetKW |
+            Tok::End
+                => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_scope_tok(&self) -> bool {
+        match self {
+            Tok::Stmts |
+            Tok::FuncCall |
+            Tok::Block
+                => true,
+            _ => false,
+        }
+    }
+}
+

@@ -1,5 +1,5 @@
 use crate::parser::Parser;
-use crate::ast::{Ast, Node};
+use crate::ast::Ast;
 use crate::tokens::Tok;
 
 impl Parser {
@@ -10,10 +10,7 @@ impl Parser {
 
             var.token = Tok::FuncCall;
             var.children.push(expr_list);
-
             ast.node_stack.push(var);
-
-            println!("reducing expr func call");
         }
 
         self.install_prod(Tok::Expr, &vec![
@@ -52,6 +49,10 @@ impl Parser {
 
     pub fn install_expr_string(&mut self) {
         self.install_prod(Tok::Expr, &vec![Tok::String], None);
+    }
+
+    pub fn install_expr_int(&mut self) {
+        self.install_prod(Tok::Expr, &vec![Tok::Int], None);
     }
 
     pub fn install_expr_var(&mut self) {

@@ -17,12 +17,11 @@ impl Parser {
 
             stmts.children.push(stmt);
             ast.node_stack.push(stmts);
-            //println!("stmts list reduct");
         }
 
         self.install_prod(Tok::Stmts, &vec![
-            Tok::Stmts,
-            Tok::Stmt],
+            Tok::Stmt,
+            Tok::Stmts],
         Some(action));
     }
 
@@ -30,13 +29,11 @@ impl Parser {
         fn action(ast: &mut Ast) {
             let stmts = Node {
                 token: Tok::Stmts,
-                type_id: None,
-                val: None,
+                attr: None,
                 children: vec![]
             };
 
             ast.node_stack.push(stmts);
-            //println!("stmts last reduct");
         }
 
         self.install_prod(Tok::Stmts, &vec![], Some(action));

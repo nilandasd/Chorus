@@ -1,4 +1,3 @@
-
 use lexify::{Lexify, LexifyToken, LexifyError};
 use std::io::BufReader;
 use std::fs::File;

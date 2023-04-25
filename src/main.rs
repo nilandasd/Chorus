@@ -1,8 +1,9 @@
 mod config;
-mod chorus;
 mod tokens;
 mod lexer;
 mod parser;
+mod chorus;
+mod generator;
 mod ast;
 
 use crate::chorus::Chorus;
@@ -23,5 +24,5 @@ fn main() {
 
 fn run(config: &Config) {
     let mut chorus = Chorus::init();
-    chorus.compile(config.filename);
+    chorus.interpret(config.filename);
 }

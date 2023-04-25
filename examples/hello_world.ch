@@ -1,6 +1,6 @@
 fn testing() {
-   let test = "hello world";
-   println(test);
+   test = "hello world"
+   println(test)
 }
 
-testing();
+testing()

@@ -20,8 +20,7 @@ impl Parser {
             ast.node_stack.push(Node {
                     token: Tok::ExprList,
                     children: vec![],
-                    type_id: None,
-                    val: None,
+                    attr: None,
                 }
             )
         }
