@@ -18,8 +18,6 @@ pub struct Parser {
     parser: Bovidae,
     lexer: Lexer,
     reduction_actions: Vec<Option<fn(&mut Ast)>>,
-    ast: Ast,
-    generator: Generator,
 }
 
 impl Parser {
@@ -35,20 +33,18 @@ impl Parser {
             parser: Bovidae::new(),
             lexer: Lexer::init(),
             reduction_actions: Vec::<Option<fn(&mut Ast)>>::new(),
-            ast: Ast::init(),
-            generator: Generator::init(),
         }
     }
 
-    pub fn build_ast(&mut self, lexer: &mut Lexer, generator: &mut Generator) {
+    pub fn build_ast(&mut self, lexer: &mut Lexer, ast: &mut Ast) {
         loop {
             let lex_tok = lexer.next_token().ok().unwrap();
 
             //println!("{:?}", lex_tok);
 
             match lex_tok {
-                LexifyToken::Eof => self.parse_end(),
-                LexifyToken::Tok(tid, attr) => self.parse(tid, attr),
+                LexifyToken::Eof => self.parse_end(ast),
+                LexifyToken::Tok(tid, attr) => self.parse(tid, attr, ast),
             }
 
             if let LexifyToken::Eof = lex_tok {
@@ -57,44 +53,40 @@ impl Parser {
         }
     }
 
-    pub fn display_ast(&self) {
-        self.ast.display();
-    }
-
-    fn shift_node(&mut self, tok: Tok, attr: Option<&str>) {
+    fn shift_node(&mut self, tok: Tok, attr: Option<&str>, ast: &mut Ast) {
         if tok.non_semantic_token() { return }
 
         match tok {
             Tok::String => {
-                self.ast.node_stack.push(Node {
+                ast.node_stack.push(Node {
                     token: Tok::String,
                     children: vec![],
                     attr: Some(Value::String(attr.unwrap().to_string()))
                 })
             }
             Tok::Int => {
-                self.ast.node_stack.push(Node {
+                ast.node_stack.push(Node {
                     token: Tok::Int,
                     children: vec![],
                     attr: Some(Value::Int(attr.unwrap().to_string().parse::<i32>().unwrap()))
                 })
             }
             Tok::Var => {
-                let sym_id = self.ast.get_sym_id(attr.unwrap());
+                let sym_id = ast.get_sym_id(attr.unwrap());
 
-                self.ast.node_stack.push(Node {
+                ast.node_stack.push(Node {
                     token: Tok::Var,
                     children: vec![],
                     attr: Some(Value::Sym(sym_id))
                 })
             }
-            _ => self.ast.node_stack.push(Node::new(tok)),
+            _ => ast.node_stack.push(Node::new(tok)),
         }
     }
 
-    fn reduce_node(&mut self, pid: ProdID) {
+    fn reduce_node(&mut self, pid: ProdID, ast: &mut Ast) {
         if let Some(action) = self.reduction_actions[pid] {
-            action(&mut self.ast);
+            action(ast);
         }
     }
 
@@ -111,11 +103,11 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self, raw_tid: TokID, attr: Option<&str>) {
-        self.parse_until_shift(Some(self.process_raw_tid(raw_tid, attr)), attr);
+    pub fn parse(&mut self, raw_tid: TokID, attr: Option<&str>, ast: &mut Ast) {
+        self.parse_until_shift(Some(self.process_raw_tid(raw_tid, attr)), attr, ast);
     }
 
-    fn parse_until_shift(&mut self, tid: Option<TokID>, attr: Option<&str>) {
+    fn parse_until_shift(&mut self, tid: Option<TokID>, attr: Option<&str>, ast: &mut Ast) {
         loop {
             let parse_result = self.parser.parse(tid);
 
@@ -127,11 +119,11 @@ impl Parser {
                     ParseResult::Reduction(_, pid) => {
                         // TODO remove tid from ParseResult
 
-                        self.reduce_node(pid);
+                        self.reduce_node(pid, ast);
                         continue;
                     }
                     ParseResult::Shift => {
-                        self.shift_node(tid_to_tok(tid.unwrap()), attr);
+                        self.shift_node(tid_to_tok(tid.unwrap()), attr, ast);
                         break;
                     }
                 }
@@ -139,11 +131,9 @@ impl Parser {
         }
     }
 
-    fn parse_end(&mut self) {
-        self.parse_until_shift(Some(Tok::End as TokID), None);
-        self.parse_until_shift(None, None);
-
-        self.ast.traverse();
+    fn parse_end(&mut self, ast: &mut Ast) {
+        self.parse_until_shift(Some(Tok::End as TokID), None, ast);
+        self.parse_until_shift(None, None, ast);
     }
 
     pub fn install_prod(&mut self, head: Tok, body: &Vec<Tok>, action: Option<fn(&mut Ast)>) {
