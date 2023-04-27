@@ -1,6 +1,8 @@
 use crate::parser::Parser;
-use crate::ast::{Ast, Value};
+use crate::ast::{Ast, NodeVal};
 use crate::tokens::Tok;
+
+// TODO add if, ifelse, while, for in
 
 impl Parser {
     pub fn install_stmt_func_decl(&mut self) {
@@ -29,7 +31,7 @@ impl Parser {
             let mut eq = ast.node_stack.pop().unwrap();
             let var = ast.node_stack.pop().unwrap();
 
-            eq.attr = var.attr;
+            eq.val = var.val;
             eq.children.push(expr);
 
             ast.node_stack.push(eq);

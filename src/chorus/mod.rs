@@ -2,12 +2,14 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::ast::Ast;
 use crate::generator::Generator;
+use crate::interpreter::Interpreter;
+
 pub struct Chorus {
     lexer: Lexer,
     parser: Parser,
-    generator: Generator,
     ast: Ast,
-
+    generator: Generator,
+    interpreter: Interpreter,
 }
 
 impl Chorus {
@@ -17,15 +19,17 @@ impl Chorus {
             parser: Parser::init(),
             ast: Ast::init(),
             generator: Generator::init(),
+            interpreter: Interpreter::init(),
         }
     }
 
     pub fn interpret(&mut self, file_path: &str) {
         self.lexer.open_file(file_path);
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
-        self.ast.traverse();
         self.ast.display();
-        //self.interpreter.run(self.generator.code);
+        self.ast.traverse(&mut self.generator);
+        self.generator.display();
+        self.interpreter.run(&mut self.generator);
     }
 }
 #[cfg(test)]

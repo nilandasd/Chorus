@@ -3,31 +3,30 @@ use crate::generator::Generator;
 use std::collections::HashMap;
 
 type SymID = usize;
-type ObjID = usize;
-type FnID = usize;
+type NodeID = usize;
 
 #[derive(Debug)]
 pub struct Ast {
     pub node_stack: Vec<Node>, // at end of parsing node_stack[0] is the ast root
     pub symbol_table: HashMap::<String, SymID>,
+    node_counter: usize,
 }
 
 #[derive(Debug)]
-pub enum Value {
+pub enum NodeVal {
     Int(i32),
     Float(f64),
     String(String),
-    List(Vec<Box<Value>>),
-    Obj(ObjID),
-    Fn(FnID), // usize for arg count
-    Sym(SymID)
+    Bool(bool),
+    Sym(SymID),
 }
 
 #[derive(Debug)]
 pub struct Node {
     pub token: Tok,
     pub children: Vec<Node>,
-    pub attr: Option<Value>,
+    pub val: Option<NodeVal>,
+    pub id: NodeID,
 }
 
 impl Node {
@@ -35,7 +34,15 @@ impl Node {
         Self {
             token,
             children: vec![],
-            attr: None,
+            val: None,
+            id: 0,
+        }
+    }
+
+    pub fn has_const_val(&self) -> bool {
+        match self.val.as_ref() {
+            Some(NodeVal::Sym(_)) | None => false,
+            _ => true
         }
     }
 
@@ -50,15 +57,19 @@ impl Node {
     }
 
     fn enter_node(&mut self, generator: &mut Generator) {
-        println!("entering: {:?}", self.token);
+        // println!("entering: {:?}", self.token);
     }
 
     fn leave_node(&mut self, generator: &mut Generator) {
         match self.token {
-
+            Tok::Plus => {
+                generator.gen_expr(self);
+            }
+            Tok::Eq => {
+                generator.gen_decl(self);
+            }
             _ => {}
         }
-        println!("leaving: {:?}", self.token);
     }
 }
 
@@ -67,7 +78,34 @@ impl Ast {
         Self {
             node_stack: vec![],
             symbol_table: HashMap::<String, SymID>::new(),
+            node_counter: 0,
         }
+    }
+
+    pub fn synthesize_expr(&mut self, op: Tok, left_val: NodeVal, right_val: NodeVal) {
+        match op {
+            Tok::Plus => {
+                match (left_val, right_val) {
+                    (NodeVal::Int(l), NodeVal::Int(r)) => {
+                        self.push_node(Tok::Int, Some(NodeVal::Int(l+r)));
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn push_node(&mut self, token: Tok, val: Option<NodeVal>) {
+        self.node_counter += 1;
+
+        self.node_stack.push(
+            Node {
+                id: self.node_counter,
+                token,
+                val,
+                children: vec![]
+        });
     }
 
     pub fn get_sym_id(&mut self, sym: &str) -> SymID {
@@ -82,9 +120,8 @@ impl Ast {
        }
     }
 
-    pub fn traverse(&mut self) {
-        let mut generator = Generator {};
-        self.node_stack[0].traverse(&mut generator);
+    pub fn traverse(&mut self, generator: &mut Generator) {
+        self.node_stack[0].traverse(generator);
     }
 
     pub fn display(&self) {
@@ -105,10 +142,10 @@ impl Ast {
 
         print!("{:?}", node.token);
 
-        match &node.attr {
-            Some(Value::String(val)) => print!(" :: {}", val),
-            Some(Value::Int(val)) => print!(" :: {}", val),
-            Some(Value::Sym(sym_id)) => print!(" :: {}", sym_id),
+        match &node.val {
+            Some(NodeVal::String(val)) => print!(" :: {}", val),
+            Some(NodeVal::Int(val)) => print!(" :: {}", val),
+            Some(NodeVal::Sym(sym_id)) => print!(" :: {}", sym_id),
             _ => {}
         }
 

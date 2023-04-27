@@ -1,6 +1,6 @@
 pub type TokID = usize;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tok {
     Var,
     Int,
@@ -98,16 +98,6 @@ impl Tok {
             Tok::FnKW |
             Tok::LetKW |
             Tok::End
-                => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_scope_tok(&self) -> bool {
-        match self {
-            Tok::Stmts |
-            Tok::FuncCall |
-            Tok::Block
                 => true,
             _ => false,
         }

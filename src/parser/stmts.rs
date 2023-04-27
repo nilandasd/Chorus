@@ -27,13 +27,7 @@ impl Parser {
 
     pub fn install_stmts_last(&mut self) {
         fn action(ast: &mut Ast) {
-            let stmts = Node {
-                token: Tok::Stmts,
-                attr: None,
-                children: vec![]
-            };
-
-            ast.node_stack.push(stmts);
+            ast.push_node(Tok::Stmts, None);
         }
 
         self.install_prod(Tok::Stmts, &vec![], Some(action));

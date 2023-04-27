@@ -17,12 +17,7 @@ impl Parser {
 
     pub fn install_expr_list_empty(&mut self) {
         fn action(ast: &mut Ast) {
-            ast.node_stack.push(Node {
-                    token: Tok::ExprList,
-                    children: vec![],
-                    attr: None,
-                }
-            )
+            ast.push_node(Tok::ExprList, None);
         }
 
         self.install_prod(Tok::ExprList, &vec![], Some(action));

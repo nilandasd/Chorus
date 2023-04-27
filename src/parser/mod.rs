@@ -1,7 +1,7 @@
 use bovidae::{Bovidae, ParseResult};  
 use lexify::{LexifyToken, LexifyError};
 use crate::tokens::{Tok, TokID, tid_to_tok, keyword_check};
-use crate::ast::{Ast, Node, Value};
+use crate::ast::{Ast, Node, NodeVal};
 use crate::lexer::Lexer;
 use crate::generator::Generator;
 
@@ -57,30 +57,14 @@ impl Parser {
         if tok.non_semantic_token() { return }
 
         match tok {
-            Tok::String => {
-                ast.node_stack.push(Node {
-                    token: Tok::String,
-                    children: vec![],
-                    attr: Some(Value::String(attr.unwrap().to_string()))
-                })
-            }
-            Tok::Int => {
-                ast.node_stack.push(Node {
-                    token: Tok::Int,
-                    children: vec![],
-                    attr: Some(Value::Int(attr.unwrap().to_string().parse::<i32>().unwrap()))
-                })
-            }
+            Tok::String => ast.push_node(Tok::String, Some(NodeVal::String(attr.unwrap().to_string()))),
+            Tok::Int => ast.push_node(Tok::Int, Some(NodeVal::Int(attr.unwrap().to_string().parse::<i32>().unwrap()))),
             Tok::Var => {
                 let sym_id = ast.get_sym_id(attr.unwrap());
 
-                ast.node_stack.push(Node {
-                    token: Tok::Var,
-                    children: vec![],
-                    attr: Some(Value::Sym(sym_id))
-                })
+                ast.push_node(Tok::Var, Some(NodeVal::Sym(sym_id)));
             }
-            _ => ast.node_stack.push(Node::new(tok)),
+            _ => ast.push_node(tok, None),
         }
     }
 

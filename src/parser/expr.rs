@@ -35,9 +35,13 @@ impl Parser {
             let mut op = ast.node_stack.pop().unwrap();
             let left_expr = ast.node_stack.pop().unwrap();
 
-            op.children.push(left_expr);
-            op.children.push(right_expr);
-            ast.node_stack.push(op);
+            if left_expr.has_const_val() && right_expr.has_const_val() {
+                ast.synthesize_expr(op.token, left_expr.val.unwrap(), right_expr.val.unwrap());
+            } else {
+                op.children.push(left_expr);
+                op.children.push(right_expr);
+                ast.node_stack.push(op);
+            }
         }
 
         self.install_prod(Tok::Expr, &vec![

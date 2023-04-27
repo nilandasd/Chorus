@@ -38,6 +38,7 @@ impl Lexer {
 
     fn install_ignores(&mut self) {
         self.lexer.set_ignore("\\w+");
+        self.lexer.set_ignore(r#"/\*.*\*/"#);
     }
 
     fn install_terms(&mut self) {
