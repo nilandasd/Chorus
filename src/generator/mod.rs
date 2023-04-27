@@ -21,7 +21,7 @@ enum IRval {
 #[derive(Debug)]
 enum IRop {
     Plus,
-    Minus
+    Minus,
 }
 
 #[derive(Debug)]
@@ -32,15 +32,10 @@ enum IRline {
     Jump(LabelID),
     JmpIf(LabelID, IRval),
     Call(IRval, Vec<IRval>),
-    Return(IRval)
-}
-
-pub struct Block {
-    
+    Return(IRval),
 }
 pub struct Generator {
     code: Vec<IRline>,
-    //blocks: Vec<Block>,
 }
 
 impl Generator {
@@ -72,21 +67,19 @@ impl Generator {
     fn node_val_to_ir_val(node: &Node) -> IRval {
         match node.val.as_ref() {
             None => IRval::Temp(node.id),
-            Some(val) => {
-                match val {
-                    NodeVal::Int(i) => IRval::Int(*i),
-                    NodeVal::Sym(s) => IRval::Sym(*s),
-                    _ => todo!("cant convert to this val"),
-                }
-            }
+            Some(val) => match val {
+                NodeVal::Int(i) => IRval::Int(*i),
+                NodeVal::Sym(s) => IRval::Sym(*s),
+                _ => todo!("cant convert to this val"),
+            },
         }
     }
 
     fn tok_op_to_ir_op(tok_op: Tok) -> IRop {
         match tok_op {
-            Tok::Plus =>  IRop::Plus,
+            Tok::Plus => IRop::Plus,
             Tok::Minus => IRop::Minus,
-            _ => todo!("have yet to implement this op")
+            _ => todo!("have yet to implement this op"),
         }
     }
 

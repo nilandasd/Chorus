@@ -1,11 +1,11 @@
-mod config;
-mod tokens;
-mod lexer;
-mod parser;
 mod ast;
+mod chorus;
+mod config;
 mod generator;
 mod interpreter;
-mod chorus;
+mod lexer;
+mod parser;
+mod tokens;
 
 use crate::chorus::Chorus;
 use crate::config::Config;

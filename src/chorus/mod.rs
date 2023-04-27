@@ -1,8 +1,8 @@
-use crate::lexer::Lexer;
-use crate::parser::Parser;
 use crate::ast::Ast;
 use crate::generator::Generator;
 use crate::interpreter::Interpreter;
+use crate::lexer::Lexer;
+use crate::parser::Parser;
 
 pub struct Chorus {
     lexer: Lexer,

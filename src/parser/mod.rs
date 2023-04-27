@@ -1,22 +1,20 @@
-use bovidae::{Bovidae, ParseResult};  
-use lexify::{LexifyToken, LexifyError};
-use crate::tokens::{Tok, TokID, tid_to_tok, keyword_check};
-use crate::ast::{Ast, Node, NodeVal};
+use crate::ast::{Ast, NodeVal};
 use crate::lexer::Lexer;
-use crate::generator::Generator;
+use crate::tokens::{keyword_check, tid_to_tok, Tok, TokID};
+use bovidae::{Bovidae, ParseResult};
+use lexify::LexifyToken;
 
-pub mod stmts;
-pub mod stmt;
-pub mod block;
-pub mod expr_list;
 pub mod arg_list;
-pub mod expr;
 pub mod binop;
+pub mod block;
+pub mod expr;
+pub mod expr_list;
+pub mod stmt;
+pub mod stmts;
 
 type ProdID = usize;
 pub struct Parser {
     parser: Bovidae,
-    lexer: Lexer,
     reduction_actions: Vec<Option<fn(&mut Ast)>>,
 }
 
@@ -31,7 +29,6 @@ impl Parser {
     pub fn new() -> Self {
         Self {
             parser: Bovidae::new(),
-            lexer: Lexer::init(),
             reduction_actions: Vec::<Option<fn(&mut Ast)>>::new(),
         }
     }
@@ -54,11 +51,21 @@ impl Parser {
     }
 
     fn shift_node(&mut self, tok: Tok, attr: Option<&str>, ast: &mut Ast) {
-        if tok.non_semantic_token() { return }
+        if tok.non_semantic_token() {
+            return;
+        }
 
         match tok {
-            Tok::String => ast.push_node(Tok::String, Some(NodeVal::String(attr.unwrap().to_string()))),
-            Tok::Int => ast.push_node(Tok::Int, Some(NodeVal::Int(attr.unwrap().to_string().parse::<i32>().unwrap()))),
+            Tok::String => ast.push_node(
+                Tok::String,
+                Some(NodeVal::String(attr.unwrap().to_string())),
+            ),
+            Tok::Int => ast.push_node(
+                Tok::Int,
+                Some(NodeVal::Int(
+                    attr.unwrap().to_string().parse::<i32>().unwrap(),
+                )),
+            ),
             Tok::Var => {
                 let sym_id = ast.get_sym_id(attr.unwrap());
 
@@ -76,7 +83,7 @@ impl Parser {
 
     fn process_raw_tid(&self, raw_tid: TokID, attr: Option<&str>) -> TokID {
         match tid_to_tok(raw_tid) {
-            Tok::Var =>  {
+            Tok::Var => {
                 if let Some(keyword) = keyword_check(attr.unwrap()) {
                     keyword as TokID
                 } else {
@@ -99,7 +106,10 @@ impl Parser {
                 panic!("cringe, no error recovery")
             } else {
                 match parse_result.ok().unwrap() {
-                    ParseResult::Accept => { println!("ACCEPTED :) ~!!!!~~!!~!~!"); break; }
+                    ParseResult::Accept => {
+                        println!("ACCEPTED :) ~!!!!~~!!~!~!");
+                        break;
+                    }
                     ParseResult::Reduction(_, pid) => {
                         // TODO remove tid from ParseResult
 
@@ -121,9 +131,7 @@ impl Parser {
     }
 
     pub fn install_prod(&mut self, head: Tok, body: &Vec<Tok>, action: Option<fn(&mut Ast)>) {
-        let tok_id_body = body.iter()
-            .map(|tok| *tok as TokID)
-            .collect();
+        let tok_id_body = body.iter().map(|tok| *tok as TokID).collect();
 
         self.reduction_actions.push(action);
 

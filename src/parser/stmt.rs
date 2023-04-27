@@ -1,5 +1,5 @@
+use crate::ast::Ast;
 use crate::parser::Parser;
-use crate::ast::{Ast, NodeVal};
 use crate::tokens::Tok;
 
 // TODO add if, ifelse, while, for in
@@ -15,14 +15,18 @@ impl Parser {
             println!("reducing func decl");
         }
 
-        self.install_prod(Tok::Stmt, &vec![
-            Tok::FnKW,
-            Tok::Var,
-            Tok::LeftParen,
-            Tok::ArgList,
-            Tok::RightParen,
-            Tok::Block],
-            Some(action));
+        self.install_prod(
+            Tok::Stmt,
+            &vec![
+                Tok::FnKW,
+                Tok::Var,
+                Tok::LeftParen,
+                Tok::ArgList,
+                Tok::RightParen,
+                Tok::Block,
+            ],
+            Some(action),
+        );
     }
 
     pub fn install_stmt_var_decl(&mut self) {
@@ -37,23 +41,14 @@ impl Parser {
             ast.node_stack.push(eq);
         }
 
-        self.install_prod(Tok::Stmt, &vec![
-            Tok::Var,
-            Tok::Eq,
-            Tok::Expr],
-        Some(action));
+        self.install_prod(Tok::Stmt, &vec![Tok::Var, Tok::Eq, Tok::Expr], Some(action));
     }
 
     pub fn install_stmt_expr(&mut self) {
-        self.install_prod(Tok::Stmt, &vec![
-            Tok::Expr],
-        None);
+        self.install_prod(Tok::Stmt, &vec![Tok::Expr], None);
     }
 
     pub fn install_stmt_if(&mut self) {
-        self.install_prod(Tok::Stmt, &vec![
-            Tok::IfKW,
-            Tok::Block],
-        None);
+        self.install_prod(Tok::Stmt, &vec![Tok::IfKW, Tok::Expr, Tok::Block], None);
     }
 }

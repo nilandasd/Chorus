@@ -1,18 +1,11 @@
 use crate::generator::Generator;
 
-pub struct Interpreter {
-
-}
-
+pub struct Interpreter {}
 
 impl Interpreter {
     pub fn init() -> Self {
-        Self {
-
-        }
+        Self {}
     }
 
-    pub fn run(&mut self, generator: &mut Generator) {
-
-    }
+    pub fn run(&mut self, generator: &mut Generator) {}
 }

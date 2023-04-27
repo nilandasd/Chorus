@@ -1,5 +1,5 @@
-use crate::tokens::Tok;
 use crate::generator::Generator;
+use crate::tokens::Tok;
 use std::collections::HashMap;
 
 type SymID = usize;
@@ -8,7 +8,7 @@ type NodeID = usize;
 #[derive(Debug)]
 pub struct Ast {
     pub node_stack: Vec<Node>, // at end of parsing node_stack[0] is the ast root
-    pub symbol_table: HashMap::<String, SymID>,
+    pub symbol_table: HashMap<String, SymID>,
     node_counter: usize,
 }
 
@@ -42,7 +42,7 @@ impl Node {
     pub fn has_const_val(&self) -> bool {
         match self.val.as_ref() {
             Some(NodeVal::Sym(_)) | None => false,
-            _ => true
+            _ => true,
         }
     }
 
@@ -84,22 +84,18 @@ impl Ast {
 
     pub fn synthesize_expr(&mut self, op: Tok, left_val: NodeVal, right_val: NodeVal) {
         match op {
-            Tok::Plus => {
-                match (left_val, right_val) {
-                    (NodeVal::Int(l), NodeVal::Int(r)) => {
-                        self.push_node(Tok::Int, Some(NodeVal::Int(l + r)));
-                    }
-                    _ => {}
+            Tok::Plus => match (left_val, right_val) {
+                (NodeVal::Int(l), NodeVal::Int(r)) => {
+                    self.push_node(Tok::Int, Some(NodeVal::Int(l + r)));
                 }
-            }
-            Tok::Minus => {
-                match (left_val, right_val) {
-                    (NodeVal::Int(l), NodeVal::Int(r)) => {
-                        self.push_node(Tok::Int, Some(NodeVal::Int(l - r)));
-                    }
-                    _ => {}
+                _ => {}
+            },
+            Tok::Minus => match (left_val, right_val) {
+                (NodeVal::Int(l), NodeVal::Int(r)) => {
+                    self.push_node(Tok::Int, Some(NodeVal::Int(l - r)));
                 }
-            }
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -107,12 +103,11 @@ impl Ast {
     pub fn push_node(&mut self, token: Tok, val: Option<NodeVal>) {
         self.node_counter += 1;
 
-        self.node_stack.push(
-            Node {
-                id: self.node_counter,
-                token,
-                val,
-                children: vec![]
+        self.node_stack.push(Node {
+            id: self.node_counter,
+            token,
+            val,
+            children: vec![],
         });
     }
 
@@ -124,8 +119,8 @@ impl Ast {
             None => {
                 self.symbol_table.insert(sym.to_string(), num_symbols);
                 num_symbols
-            },
-       }
+            }
+        }
     }
 
     pub fn traverse(&mut self, generator: &mut Generator) {
@@ -133,9 +128,9 @@ impl Ast {
     }
 
     pub fn display(&self) {
-        if self.node_stack.is_empty() { 
+        if self.node_stack.is_empty() {
             println!("AST IS EMPTY :(");
-            return
+            return;
         }
 
         let root = &self.node_stack[0];
@@ -161,7 +156,7 @@ impl Ast {
             print!("\t{{");
         } else {
             println!("");
-            return; 
+            return;
         }
 
         println!("");

@@ -38,7 +38,6 @@ pub enum Tok {
     BinExpr,
     Value,
     BinOp,
-
 }
 
 pub fn keyword_check(word: &str) -> Option<Tok> {
@@ -51,16 +50,16 @@ pub fn keyword_check(word: &str) -> Option<Tok> {
 
 pub fn tid_to_tok(tid: TokID) -> Tok {
     match tid {
-        0 =>  Tok::Var,
-        1 =>  Tok::Int,
-        2 =>  Tok::String,
-        3 =>  Tok::FnKW,
-        4 =>  Tok::LetKW,
-        5 =>  Tok::IfKW,
-        6 =>  Tok::LeftCurly,
-        7 =>  Tok::RightCurly,
-        8 =>  Tok::LeftParen,
-        9 =>  Tok::RightParen,
+        0 => Tok::Var,
+        1 => Tok::Int,
+        2 => Tok::String,
+        3 => Tok::FnKW,
+        4 => Tok::LetKW,
+        5 => Tok::IfKW,
+        6 => Tok::LeftCurly,
+        7 => Tok::RightCurly,
+        8 => Tok::LeftParen,
+        9 => Tok::RightParen,
         10 => Tok::SemiColon,
         11 => Tok::Comma,
         12 => Tok::Eq,
@@ -84,25 +83,23 @@ pub fn tid_to_tok(tid: TokID) -> Tok {
         28 => Tok::BinExpr,
         29 => Tok::Value,
         30 => Tok::BinOp,
-        _ => panic!("Token does not exist")
+        _ => panic!("Token does not exist"),
     }
 }
 
 impl Tok {
     pub fn non_semantic_token(&self) -> bool {
         match self {
-            Tok::LeftCurly |
-            Tok::RightCurly |
-            Tok::LeftParen |
-            Tok::RightParen |
-            Tok::SemiColon |
-            Tok::Comma |
-            Tok::FnKW |
-            Tok::LetKW |
-            Tok::End
-                => true,
+            Tok::LeftCurly
+            | Tok::RightCurly
+            | Tok::LeftParen
+            | Tok::RightParen
+            | Tok::SemiColon
+            | Tok::Comma
+            | Tok::FnKW
+            | Tok::LetKW
+            | Tok::End => true,
             _ => false,
         }
     }
 }
-

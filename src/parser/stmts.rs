@@ -1,13 +1,10 @@
+use crate::ast::Ast;
 use crate::parser::Parser;
-use crate::ast::{Ast, Node};
 use crate::tokens::Tok;
 
 impl Parser {
     pub fn install_start(&mut self) {
-        self.install_prod(Tok::Start, &vec![
-            Tok::Stmts,
-            Tok::End],
-        None);
+        self.install_prod(Tok::Start, &vec![Tok::Stmts, Tok::End], None);
     }
 
     pub fn install_stmts_list(&mut self) {
@@ -19,10 +16,7 @@ impl Parser {
             ast.node_stack.push(stmts);
         }
 
-        self.install_prod(Tok::Stmts, &vec![
-            Tok::Stmt,
-            Tok::Stmts],
-        Some(action));
+        self.install_prod(Tok::Stmts, &vec![Tok::Stmt, Tok::Stmts], Some(action));
     }
 
     pub fn install_stmts_last(&mut self) {

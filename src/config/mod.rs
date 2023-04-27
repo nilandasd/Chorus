@@ -8,7 +8,7 @@ impl<'a> Config<'a> {
             return Err("Too many args");
         }
 
-        Ok(Self{
+        Ok(Self {
             filename: args[0].as_str(),
         })
     }

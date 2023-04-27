@@ -1,5 +1,5 @@
-use crate::parser::Parser;
 use crate::ast::Ast;
+use crate::parser::Parser;
 use crate::tokens::Tok;
 
 impl Parser {
@@ -13,20 +13,19 @@ impl Parser {
             ast.node_stack.push(var);
         }
 
-        self.install_prod(Tok::Expr, &vec![
-            Tok::Var,
-            Tok::LeftParen,
-            Tok::ExprList,
-            Tok::RightParen],
-            Some(action));
+        self.install_prod(
+            Tok::Expr,
+            &vec![Tok::Var, Tok::LeftParen, Tok::ExprList, Tok::RightParen],
+            Some(action),
+        );
     }
 
     pub fn install_expr_nested(&mut self) {
-        self.install_prod(Tok::Expr, &vec![
-            Tok::LeftParen,
+        self.install_prod(
             Tok::Expr,
-            Tok::RightParen],
-            None);
+            &vec![Tok::LeftParen, Tok::Expr, Tok::RightParen],
+            None,
+        );
     }
 
     pub fn install_expr_binop(&mut self) {
@@ -44,11 +43,11 @@ impl Parser {
             }
         }
 
-        self.install_prod(Tok::Expr, &vec![
+        self.install_prod(
             Tok::Expr,
-            Tok::BinOp,
-            Tok::Expr],
-            Some(action));
+            &vec![Tok::Expr, Tok::BinOp, Tok::Expr],
+            Some(action),
+        );
     }
 
     pub fn install_expr_string(&mut self) {
