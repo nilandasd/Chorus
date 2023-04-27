@@ -165,6 +165,6 @@ impl Parser {
         self.install_expr_var();
 
         // binop
-        self.install_binop_plus();
+        self.install_binops();
     }
 }

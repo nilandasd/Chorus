@@ -20,7 +20,8 @@ enum IRval {
 
 #[derive(Debug)]
 enum IRop {
-    Plus
+    Plus,
+    Minus
 }
 
 #[derive(Debug)]
@@ -83,7 +84,8 @@ impl Generator {
 
     fn tok_op_to_ir_op(tok_op: Tok) -> IRop {
         match tok_op {
-            Tok::Plus => IRop::Plus,
+            Tok::Plus =>  IRop::Plus,
+            Tok::Minus => IRop::Minus,
             _ => todo!("have yet to implement this op")
         }
     }

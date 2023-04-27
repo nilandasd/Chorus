@@ -87,7 +87,15 @@ impl Ast {
             Tok::Plus => {
                 match (left_val, right_val) {
                     (NodeVal::Int(l), NodeVal::Int(r)) => {
-                        self.push_node(Tok::Int, Some(NodeVal::Int(l+r)));
+                        self.push_node(Tok::Int, Some(NodeVal::Int(l + r)));
+                    }
+                    _ => {}
+                }
+            }
+            Tok::Minus => {
+                match (left_val, right_val) {
+                    (NodeVal::Int(l), NodeVal::Int(r)) => {
+                        self.push_node(Tok::Int, Some(NodeVal::Int(l - r)));
                     }
                     _ => {}
                 }
