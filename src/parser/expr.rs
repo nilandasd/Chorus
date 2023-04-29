@@ -9,7 +9,9 @@ impl Parser {
             let mut var = ast.node_stack.pop().unwrap();
 
             var.token = Tok::FuncCall;
-            var.children.push(expr_list);
+            for child in expr_list.children {
+                var.children.push(child);
+            }
             ast.node_stack.push(var);
         }
 

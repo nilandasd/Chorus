@@ -24,9 +24,12 @@ pub enum NodeVal {
 #[derive(Debug)]
 pub struct Node {
     pub token: Tok,
+    pub id: NodeID,
     pub children: Vec<Node>,
     pub val: Option<NodeVal>,
-    pub id: NodeID,
+    //start_label: Option<NodeID>,
+    //end_jump: Option<NodeID>,
+    //end_label: Option<NodeID>,
 }
 
 impl Node {
@@ -57,17 +60,46 @@ impl Node {
     }
 
     fn enter_node(&mut self, generator: &mut Generator) {
-        // println!("entering: {:?}", self.token);
+        match self.token {
+            Tok::FuncDecl => {
+                generator.gen_func_enter(self);
+            }
+
+            // FUNC DECL
+            // set the symbol ID = new func ID
+            // at the bottom of the IR add in a function
+            // LABEL Func ID
+            // block of func
+            // RETURN
+
+            // IF ELSE STMT --------
+            // label1 = id of child 1
+            // label2 = id of child 2
+            // gen expr
+            // gen JNE to label 1
+            // process child 1
+            // gen jump label2
+            // gen label1
+            // process child 2
+            // gen label2
+
+            // WHILE STMT --------
+            // gen label1
+            // JNE to label2
+            // process block
+            // jump to label 1
+            // label 2
+
+            _ => {}
+        }
     }
 
     fn leave_node(&mut self, generator: &mut Generator) {
         match self.token {
-            Tok::Plus => {
-                generator.gen_expr(self);
-            }
-            Tok::Eq => {
-                generator.gen_decl(self);
-            }
+            Tok::Plus => generator.gen_expr(self),
+            Tok::Eq => generator.gen_decl(self),
+            Tok::FuncDecl => generator.gen_func_leave(self),
+            Tok::FuncCall => generator.gen_func_call(self),
             _ => {}
         }
     }
@@ -99,16 +131,19 @@ impl Ast {
             _ => {}
         }
     }
-
-    pub fn push_node(&mut self, token: Tok, val: Option<NodeVal>) {
-        self.node_counter += 1;
-
-        self.node_stack.push(Node {
+    
+    pub fn new_node(&mut self, token: Tok, val: Option<NodeVal>) -> Node {
+        Node {
             id: self.node_counter,
             token,
             val,
             children: vec![],
-        });
+        }
+    }
+
+    pub fn push_node(&mut self, token: Tok, val: Option<NodeVal>) {
+        let new_node = self.new_node(token, val);
+        self.node_stack.push(new_node);
     }
 
     pub fn get_sym_id(&mut self, sym: &str) -> SymID {

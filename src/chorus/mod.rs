@@ -28,6 +28,7 @@ impl Chorus {
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
         self.ast.display();
         self.ast.traverse(&mut self.generator);
+        self.generator.gen_end();
         self.generator.display();
         self.interpreter.run(&mut self.generator);
     }

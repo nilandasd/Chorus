@@ -8,11 +8,11 @@ impl Parser {
     pub fn install_stmt_func_decl(&mut self) {
         fn action(ast: &mut Ast) {
             let mut stmts = ast.node_stack.pop().unwrap();
-            let _ = ast.node_stack.pop().unwrap();
+            let var = ast.node_stack.pop().unwrap();
 
+            stmts.val = var.val;
             stmts.token = Tok::FuncDecl;
             ast.node_stack.push(stmts);
-            println!("reducing func decl");
         }
 
         self.install_prod(
@@ -45,10 +45,17 @@ impl Parser {
     }
 
     pub fn install_stmt_expr(&mut self) {
-        self.install_prod(Tok::Stmt, &vec![Tok::Expr], None);
+        self.install_prod(
+            Tok::Stmt, 
+            &vec![Tok::Expr], 
+            None);
     }
 
     pub fn install_stmt_if(&mut self) {
         self.install_prod(Tok::Stmt, &vec![Tok::IfKW, Tok::Expr, Tok::Block], None);
+    }
+
+    pub fn install_println(&mut self) {
+        //self.install_prod(Tok::Stmt, &vec![Tok::PrintKW, Tok::LeftParen, Tok::Expr, Tok::RightParen], None);
     }
 }

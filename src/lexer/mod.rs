@@ -42,6 +42,7 @@ impl Lexer {
     fn install_ignores(&mut self) {
         self.lexer.set_ignore("\\w+");
         self.lexer.set_ignore(r#"/\*.*\*/"#);
+        self.lexer.set_ignore("//(.|^)+");
     }
 
     fn install_terms(&mut self) {
@@ -62,5 +63,6 @@ impl Lexer {
         self.lexer.set_rule(r#"="#, Tok::Eq as TokID, false);
         self.lexer.set_rule(r#"\+"#, Tok::Plus as TokID, false);
         self.lexer.set_rule(r#"-"#, Tok::Minus as TokID, false);
+        self.lexer.set_rule(r#","#, Tok::Comma as TokID, false);
     }
 }

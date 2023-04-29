@@ -15,6 +15,9 @@ impl Parser {
     }
 
     pub fn install_arg_list_empty(&mut self) {
-        self.install_prod(Tok::ArgList, &vec![], None);
+        self.install_prod(
+            Tok::ArgList, 
+            &vec![], 
+            None);
     }
 }
