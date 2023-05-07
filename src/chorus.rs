@@ -28,7 +28,6 @@ impl Chorus {
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
         self.ast.display();
         self.ast.traverse(&mut self.generator);
-        self.generator.gen_end();
         self.generator.display();
         self.interpreter.run(&mut self.generator);
     }
@@ -44,8 +43,14 @@ mod tests {
     }
 
     #[test]
-    fn basic() {
+    fn foobar() {
         let mut chorus = Chorus::init();
-        chorus.interpret("examples/basic.ch");
+        chorus.interpret("examples/foobar.ch");
+    }
+
+    #[test]
+    fn numbers() {
+        let mut chorus = Chorus::init();
+        chorus.interpret("examples/numbers.ch");
     }
 }

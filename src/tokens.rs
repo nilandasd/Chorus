@@ -10,6 +10,7 @@ pub enum Tok {
     FnKW,
     LetKW,
     IfKW,
+    ReturnKW,
 
     // one char terms
     LeftCurly,
@@ -31,7 +32,7 @@ pub enum Tok {
     ExprStmt,
     StmtDecl,
     ExprList,
-    ArgList,
+    VarList,
     Block,
     Expr,
     NestedExpr,
@@ -44,6 +45,7 @@ pub fn keyword_check(word: &str) -> Option<Tok> {
     match word {
         "fn" => Some(Tok::FnKW),
         "if" => Some(Tok::IfKW),
+        "return" => Some(Tok::ReturnKW),
         _ => None,
     }
 }
@@ -56,33 +58,34 @@ pub fn tid_to_tok(tid: TokID) -> Tok {
         3 => Tok::FnKW,
         4 => Tok::LetKW,
         5 => Tok::IfKW,
-        6 => Tok::LeftCurly,
-        7 => Tok::RightCurly,
-        8 => Tok::LeftParen,
-        9 => Tok::RightParen,
-        10 => Tok::SemiColon,
-        11 => Tok::Comma,
-        12 => Tok::Eq,
-        13 => Tok::Plus,
-        14 => Tok::Minus,
-        15 => Tok::End,
+        6 => Tok::ReturnKW,
+        7 => Tok::LeftCurly,
+        8 => Tok::RightCurly,
+        9 => Tok::LeftParen,
+        10 => Tok::RightParen,
+        11 => Tok::SemiColon,
+        12 => Tok::Comma,
+        13 => Tok::Eq,
+        14 => Tok::Plus,
+        15 => Tok::Minus,
+        16 => Tok::End,
 
-        // nonterms // im sexy and im sexy
-        16 => Tok::Start,
-        17 => Tok::Stmts,
-        18 => Tok::Stmt,
-        19 => Tok::FuncCall,
-        20 => Tok::FuncDecl,
-        21 => Tok::ExprStmt,
-        22 => Tok::StmtDecl,
-        23 => Tok::ExprList,
-        24 => Tok::ArgList,
-        25 => Tok::Block,
-        26 => Tok::Expr,
-        27 => Tok::NestedExpr,
-        28 => Tok::BinExpr,
-        29 => Tok::Value,
-        30 => Tok::BinOp,
+        // nonterms
+        17 => Tok::Start,
+        18 => Tok::Stmts,
+        19 => Tok::Stmt,
+        20 => Tok::FuncCall,
+        21 => Tok::FuncDecl,
+        22 => Tok::ExprStmt,
+        23 => Tok::StmtDecl,
+        24 => Tok::ExprList,
+        25 => Tok::VarList,
+        26 => Tok::Block,
+        27 => Tok::Expr,
+        28 => Tok::NestedExpr,
+        29 => Tok::BinExpr,
+        30 => Tok::Value,
+        31 => Tok::BinOp,
         _ => panic!("Token does not exist"),
     }
 }
@@ -98,6 +101,7 @@ impl Tok {
             | Tok::Comma
             | Tok::FnKW
             | Tok::LetKW
+            | Tok::ReturnKW
             | Tok::End => true,
             _ => false,
         }

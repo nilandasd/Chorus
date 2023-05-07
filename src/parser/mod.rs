@@ -4,13 +4,14 @@ use crate::tokens::{keyword_check, tid_to_tok, Tok, TokID};
 use bovidae::{Bovidae, ParseResult};
 use lexify::LexifyToken;
 
-pub mod arg_list;
+pub mod var_list;
 pub mod binop;
 pub mod block;
 pub mod expr;
 pub mod expr_list;
 pub mod stmt;
 pub mod stmts;
+pub mod call;
 
 type ProdID = usize;
 pub struct Parser {
@@ -103,11 +104,11 @@ impl Parser {
             let parse_result = self.parser.parse(tid);
 
             if parse_result.is_err() {
-                panic!("cringe, no error recovery")
+                panic!("Parsing error")
             } else {
                 match parse_result.ok().unwrap() {
                     ParseResult::Accept => {
-                        println!("ACCEPTED :) ~!!!!~~!!~!~!");
+                        println!("==== PARSER ACCEPTED :) ====");
                         break;
                     }
                     ParseResult::Reduction(_, pid) => {
@@ -152,7 +153,8 @@ impl Parser {
         // stmt
         self.install_stmt_func_decl();
         self.install_stmt_var_decl();
-        self.install_stmt_expr();
+        self.install_stmt_call();
+        self.install_stmt_return();
 
         // Expr List
         self.install_expr_list_comma();
@@ -165,12 +167,15 @@ impl Parser {
         self.install_arg_list_empty();
 
         // Expr
-        self.install_expr_func_call();
+        self.install_expr_call();
         self.install_expr_nested();
         self.install_expr_binop();
         self.install_expr_string();
         self.install_expr_int();
         self.install_expr_var();
+
+        // func call
+        self.install_call();
 
         // binop
         self.install_binops();

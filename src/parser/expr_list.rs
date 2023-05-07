@@ -23,6 +23,7 @@ impl Parser {
         fn action(ast: &mut Ast) {
             let expr = ast.node_stack.pop().unwrap();
             let mut expr_list = ast.new_node(Tok::ExprList, None);
+
             expr_list.children.push(expr);
             ast.node_stack.push(expr_list);
         }

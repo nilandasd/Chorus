@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 type SymID = usize;
 type NodeID = usize;
+const PRINT_SYM_ID: usize = 0;
+const PRINT_FN_ID: usize = 0;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -33,15 +35,6 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(token: Tok) -> Self {
-        Self {
-            token,
-            children: vec![],
-            val: None,
-            id: 0,
-        }
-    }
-
     pub fn has_const_val(&self) -> bool {
         match self.val.as_ref() {
             Some(NodeVal::Sym(_)) | None => false,
@@ -50,27 +43,20 @@ impl Node {
     }
 
     pub fn traverse(&mut self, generator: &mut Generator) {
-        self.enter_node(generator);
+        self.preprocess_node(generator);
 
         for child in self.children.iter_mut().rev() {
             child.traverse(generator);
         }
 
-        self.leave_node(generator);
+        self.process_node(generator);
     }
 
-    fn enter_node(&mut self, generator: &mut Generator) {
+    fn preprocess_node(&mut self, generator: &mut Generator) {
         match self.token {
             Tok::FuncDecl => {
                 generator.gen_func_enter(self);
             }
-
-            // FUNC DECL
-            // set the symbol ID = new func ID
-            // at the bottom of the IR add in a function
-            // LABEL Func ID
-            // block of func
-            // RETURN
 
             // IF ELSE STMT --------
             // label1 = id of child 1
@@ -94,12 +80,14 @@ impl Node {
         }
     }
 
-    fn leave_node(&mut self, generator: &mut Generator) {
+    fn process_node(&mut self, generator: &mut Generator) {
         match self.token {
-            Tok::Plus => generator.gen_expr(self),
+            Tok::Plus | Tok::Minus => generator.gen_expr(self),
             Tok::Eq => generator.gen_decl(self),
             Tok::FuncDecl => generator.gen_func_leave(self),
             Tok::FuncCall => generator.gen_func_call(self),
+            Tok::ReturnKW => generator.gen_return(self),
+            Tok::VarList => generator.gen_var_list(self),
             _ => {}
         }
     }
@@ -109,9 +97,17 @@ impl Ast {
     pub fn init() -> Self {
         Self {
             node_stack: vec![],
-            symbol_table: HashMap::<String, SymID>::new(),
-            node_counter: 0,
+            symbol_table: Ast::init_symbol_table(),
+            node_counter: 1,
         }
+    }
+
+    fn init_symbol_table() -> HashMap<String, SymID> {
+        let mut symbol_table = HashMap::<String, SymID>::new();
+
+        symbol_table.insert("print".to_string(), PRINT_SYM_ID);
+
+        symbol_table
     }
 
     pub fn synthesize_expr(&mut self, op: Tok, left_val: NodeVal, right_val: NodeVal) {
@@ -133,6 +129,8 @@ impl Ast {
     }
     
     pub fn new_node(&mut self, token: Tok, val: Option<NodeVal>) -> Node {
+        self.node_counter += 1;
+
         Node {
             id: self.node_counter,
             token,
@@ -160,6 +158,7 @@ impl Ast {
 
     pub fn traverse(&mut self, generator: &mut Generator) {
         self.node_stack[0].traverse(generator);
+        generator.complete_generation();
     }
 
     pub fn display(&self) {

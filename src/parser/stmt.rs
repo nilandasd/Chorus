@@ -2,17 +2,20 @@ use crate::ast::Ast;
 use crate::parser::Parser;
 use crate::tokens::Tok;
 
-// TODO add if, ifelse, while, for in
-
 impl Parser {
     pub fn install_stmt_func_decl(&mut self) {
         fn action(ast: &mut Ast) {
-            let mut stmts = ast.node_stack.pop().unwrap();
-            let var = ast.node_stack.pop().unwrap();
+            let stmts = ast.node_stack.pop().unwrap();
+            let var_list = ast.node_stack.pop().unwrap();
+            let mut var = ast.node_stack.pop().unwrap();
 
-            stmts.val = var.val;
-            stmts.token = Tok::FuncDecl;
-            ast.node_stack.push(stmts);
+
+            for child in stmts.children {
+                var.children.push(child);
+            }
+            var.children.push(var_list);
+            var.token = Tok::FuncDecl;
+            ast.node_stack.push(var);
         }
 
         self.install_prod(
@@ -21,7 +24,7 @@ impl Parser {
                 Tok::FnKW,
                 Tok::Var,
                 Tok::LeftParen,
-                Tok::ArgList,
+                Tok::VarList,
                 Tok::RightParen,
                 Tok::Block,
             ],
@@ -41,21 +44,38 @@ impl Parser {
             ast.node_stack.push(eq);
         }
 
-        self.install_prod(Tok::Stmt, &vec![Tok::Var, Tok::Eq, Tok::Expr], Some(action));
-    }
-
-    pub fn install_stmt_expr(&mut self) {
         self.install_prod(
             Tok::Stmt, 
-            &vec![Tok::Expr], 
+            &vec![Tok::Var, Tok::Eq, Tok::Expr], 
+            Some(action));
+    }
+
+    pub fn install_stmt_call(&mut self) {
+        self.install_prod(
+            Tok::Stmt, 
+            &vec![Tok::FuncCall], 
             None);
     }
 
-    pub fn install_stmt_if(&mut self) {
-        self.install_prod(Tok::Stmt, &vec![Tok::IfKW, Tok::Expr, Tok::Block], None);
+    pub fn install_stmt_return(&mut self) {
+        fn action(ast: &mut Ast) {
+            let expr = ast.node_stack.pop().unwrap();
+            let mut return_kw = ast.new_node(Tok::ReturnKW, None);
+            return_kw.children.push(expr);
+
+            ast.node_stack.push(return_kw);
+        }
+
+        self.install_prod(
+            Tok::Stmt, 
+            &vec![Tok::ReturnKW, Tok::Expr], 
+            Some(action));
     }
 
-    pub fn install_println(&mut self) {
-        //self.install_prod(Tok::Stmt, &vec![Tok::PrintKW, Tok::LeftParen, Tok::Expr, Tok::RightParen], None);
+    pub fn install_stmt_if(&mut self) {
+        self.install_prod(
+            Tok::Stmt, 
+            &vec![Tok::IfKW, Tok::Expr, Tok::Block], 
+            None);
     }
 }
