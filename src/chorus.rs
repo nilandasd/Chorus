@@ -37,6 +37,12 @@ mod tests {
     use super::*;
 
     #[test]
+    fn first_words() {
+        let mut chorus = Chorus::init();
+        chorus.interpret("examples/first_words.ch");
+    }
+
+    #[test]
     fn hello_world() {
         let mut chorus = Chorus::init();
         chorus.interpret("examples/hello_world.ch");

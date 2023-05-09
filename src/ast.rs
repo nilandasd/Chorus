@@ -5,7 +5,6 @@ use std::collections::HashMap;
 type SymID = usize;
 type NodeID = usize;
 const PRINT_SYM_ID: usize = 0;
-const PRINT_FN_ID: usize = 0;
 
 #[derive(Debug)]
 pub struct Ast {
@@ -84,7 +83,7 @@ impl Node {
         match self.token {
             Tok::Plus | Tok::Minus => generator.gen_expr(self),
             Tok::Eq => generator.gen_decl(self),
-            Tok::FuncDecl => generator.gen_func_leave(self),
+            Tok::FuncDecl => generator.gen_func_leave(),
             Tok::FuncCall => generator.gen_func_call(self),
             Tok::ReturnKW => generator.gen_return(self),
             Tok::VarList => generator.gen_var_list(self),

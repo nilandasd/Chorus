@@ -1,21 +1,23 @@
 use crate::ast::{Node, NodeVal};
 use crate::tokens::Tok;
+use std::collections::HashMap;
 
 type SymID = usize;
 type TempID = usize;
 type FnID = usize;
 type ObjID = usize;
-type StringID = usize;
+type StrID = usize;
 type ListID = usize;
 type LabelID = usize;
 type NodeID = usize;
 type ArgID = usize;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum IRval {
     Nil,
     Int(i32),
-    String(StringID),
+    String(String),
+    StrID(StrID),
     Sym(SymID),
     Temp(TempID),
     Arg,
@@ -31,7 +33,7 @@ pub enum IRop {
     Minus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum IRline {
     Op(IRval, IRop, IRval, IRval),
     Load(IRval, IRval),
@@ -51,6 +53,7 @@ pub struct Generator {
     pub code: Vec<IRline>,
     funcs: Vec<FuncDef>,
     func_stack: Vec<FnID>, // the top of the stack is the current function being defined
+    strings: Vec<String>,
 }
 
 impl Generator {
@@ -58,7 +61,8 @@ impl Generator {
         let mut generator = Self {
             code: vec![],
             funcs: vec![],
-            func_stack: vec![]
+            func_stack: vec![],
+            strings: vec![]
         };
 
         generator.init_code();
@@ -68,6 +72,45 @@ impl Generator {
 
     pub fn complete_generation(&mut self) {
         self.push_line(IRline::End);
+        self.concat_functions();
+        self.remove_labels();
+    }
+
+    fn concat_functions(&mut self) {
+        for func in self.funcs.iter() {
+            for line in func.code.iter() {
+                self.code.push(line.clone());
+            }
+        }
+    }
+
+    fn remove_labels(&mut self) {
+        let mut fixed_code = Vec::<IRline>::new();
+        let mut label_positions = HashMap::<usize, usize>::new();
+
+        // first pass remove labels and save their positions
+        for line in self.code.iter() {
+            if let IRline::Label(label_id) = line {
+                label_positions.insert(*label_id, fixed_code.len());
+            } else {
+                fixed_code.push(line.clone());
+            }
+        }
+
+        //println!("{:?}", label_positions);
+        // second pass remove labels
+        for line in fixed_code.iter_mut() {
+            match line {
+                IRline::Load(from_id, _) => {
+                    if let IRval::Fn(id) = from_id {
+                        *from_id = IRval::Fn(*(label_positions.get(id).unwrap()));
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        self.code = fixed_code;
     }
 
     fn init_code(&mut self) {
@@ -156,8 +199,8 @@ impl Generator {
         }
     }
 
-    pub fn gen_func_leave(&mut self, func_decl: &mut Node) {
-        if let Some(IRline::Return(ir_val)) = self.funcs[*(self.func_stack.last().unwrap())].code.last() {
+    pub fn gen_func_leave(&mut self) {
+        if let Some(IRline::Return(_)) = self.funcs[*(self.func_stack.last().unwrap())].code.last() {
             // don't need to add a return statement
         } else {
             self.push_line(IRline::Return(IRval::Nil));
@@ -177,7 +220,7 @@ impl Generator {
             Some(val) => match val {
                 NodeVal::Int(i) => IRval::Int(*i),
                 NodeVal::Sym(s) => IRval::Sym(*s),
-                //NodeVal::String(s) => IRval::String(s.clone()),
+                NodeVal::String(s) => IRval::String(s.clone()),
                 _ => todo!("cant convert to this val"),
             },
         }
@@ -193,15 +236,11 @@ impl Generator {
 
     pub fn display(&self) {
         println!("----- IR CODE -----");
+        let mut line_num = 0;
 
         for line in self.code.iter() {
-            println!("{:?}", line);
-        }
-
-        for func in self.funcs.iter() {
-            for line in func.code.iter() {
-                println!("{:?}", line);
-            }
+            println!("{}: {:?}", line_num, line);
+            line_num += 1;
         }
     }
 }

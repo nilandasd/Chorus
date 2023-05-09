@@ -13,6 +13,7 @@ pub struct Interpreter {
     args: Vec<IRval>,
     position: usize,
     stack: Vec<StackFrame>,
+    strings: Vec<String>,
 }
 
 impl Interpreter {
@@ -21,6 +22,7 @@ impl Interpreter {
             position: 0,
             stack: Interpreter::init_stack(),
             args: vec![],
+            strings: vec![],
         }
     }
 
@@ -41,39 +43,65 @@ impl Interpreter {
     pub fn run(&mut self, generator: &mut Generator) {
         loop {
             let code = &generator.code[self.position];
+            println!("RUNNING : {:?}", code);
 
             match code {
-                IRline::Op(result, op, left, right) => self.op(*result, *op, *left, *right),
-                IRline::Load(val, to) => self.load(*val, *to),
-                IRline::Call(val, result) => {}
-                IRline::Return(val) => {}
-                IRline::Print(val) => self.print(*val),
-                IRline::Label(_) => self.next(),
+                IRline::Op(result, op, left, right) => self.op(result.clone(), op.clone(), left.clone(), right.clone()),
+                IRline::Load(val, to) => self.load(val.clone(), to.clone()),
+                IRline::Call(_, val) => self.call(val.clone()),
+                IRline::Return(val) => self.return_call(val.clone()),
+                IRline::Print(val) => self.print(val.clone()),
+                IRline::Label(_) => {},
                 IRline::Jump(_) => {}
                 IRline::JumpIf(_, _) => {}
                 IRline::End => break,
             }
-            break;
+
+            self.next();
+        }
+    }
+
+    fn return_call(&mut self, val: IRval) {
+        self.position = self.stack.last().unwrap().return_loc;
+        self.stack.pop();
+    }
+
+    fn call(&mut self, caller: IRval) {
+        let inner_val = self.get_copy_val(caller);
+
+        if let IRval::Fn(fn_id) = inner_val {
+            let new_stack = StackFrame {
+                temps: vec![],
+                syms: Vec::<(SymID, IRval)>::new(),
+                return_loc: self.position,
+            };
+
+            self.stack.push(new_stack);
+
+            self.position = fn_id - 1;
+        } else {
+            println!("INTERPRETER ERROR: non function value was called!");
         }
     }
 
     fn print(&self, val: IRval) {
         match val {
             IRval::Int(i) => println!("{}", i),
-            IRval::String(str_id) => println!("{}", self.get_str(str_id)),
-            IRval::Arg => self.print(*self.args.last().unwrap()),
-            IRval::Nil => println!("nil"),
+            IRval::String(s) => println!("{}", s),
+            IRval::StrID(str_id) => println!("{}", self.get_str(str_id)),
             IRval::Sym(sym_id) => self.print(self.get_sym_val(sym_id)),
             IRval::Temp(temp_id) => self.print(self.get_sym_val(temp_id)),
             IRval::Fn(fn_id) => todo!("fn"),
             IRval::Obj(obj_id) => todo!("obj"),
             IRval::List(list_id) => todo!("list"),
             IRval::ObjAccessor(_, _) => todo!("obj accessor"),
+            IRval::Arg => self.print(self.args.last().unwrap().clone()),
+            IRval::Nil => println!("nil"),
         }
     }
 
     fn get_str(&self, str_id: StrID) -> &str {
-        todo!()
+        self.strings[str_id].as_str()
     }
 
     fn next(&mut self) {
@@ -86,7 +114,7 @@ impl Interpreter {
         match to {
             IRval::Arg => self.args.push(copy_val),
             IRval::Sym(sym_id) => {
-                let top_stack = self.stack.len();
+                let top_stack = self.stack.len() - 1;
                 for sym_val in self.stack[top_stack].syms.iter_mut() {
                     if sym_val.0 == sym_id {
                         sym_val.1 = copy_val;
@@ -98,8 +126,6 @@ impl Interpreter {
             },
             _ => panic!("LOADING INTO NON SYM NON ARG LOCATION"),
         }
-
-        self.next();
     }
 
     fn op(&mut self, result: IRval, op: IRop, left: IRval, right: IRval) {
@@ -114,8 +140,17 @@ impl Interpreter {
             IRval::Arg => self.pop_arg(),
             IRval::Sym(sym_id) => self.get_sym_val(sym_id),
             IRval::Temp(temp_id) => self.get_temp_val(temp_id),
+            IRval::String(s) => self.new_string(s),
             _ => val,
         }
+    }
+
+    fn new_string(&mut self, s: String) -> IRval {
+        let str_id = self.strings.len();
+
+        self.strings.push(s);
+
+        IRval::StrID(str_id)
     }
 
     fn pop_arg(&mut self) -> IRval {
@@ -126,7 +161,7 @@ impl Interpreter {
         for sframe in self.stack.iter().rev() {
             for sym_val in sframe.syms.iter() {
                 if sym_val.0 == sym_id {
-                    return sym_val.1;
+                    return sym_val.1.clone();
                 }
             }
         }
@@ -137,7 +172,7 @@ impl Interpreter {
     fn get_temp_val(&self, sym_id: TempID) -> IRval {
         for temp_val in self.stack.last().unwrap().temps.iter() {
             if temp_val.0 == sym_id {
-                return temp_val.1;
+                return temp_val.1.clone();
             }
         }
 
