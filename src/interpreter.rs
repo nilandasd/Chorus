@@ -1,4 +1,5 @@
 use crate::generator::{Generator, IRval, IRline, IRop};
+use std::env;
 
 type SymID = usize;
 type StrID = usize;
@@ -9,6 +10,7 @@ struct StackFrame {
     temps: Vec<(TempID, IRval)>,
     syms: Vec<(SymID, IRval)>,
 }
+
 pub struct Interpreter {
     args: Vec<IRval>,
     position: usize,
@@ -43,27 +45,40 @@ impl Interpreter {
     pub fn run(&mut self, generator: &mut Generator) {
         loop {
             let code = &generator.code[self.position];
-            println!("RUNNING : {:?}", code);
+            if env::var("DEBUG").is_ok() {
+                println!("RUNNING : {:?}", code);
+            }
 
             match code {
                 IRline::Op(result, op, left, right) => self.op(result.clone(), op.clone(), left.clone(), right.clone()),
                 IRline::Load(val, to) => self.load(val.clone(), to.clone()),
-                IRline::Call(_, val) => self.call(val.clone()),
-                IRline::Return(val) => self.return_call(val.clone()),
+                IRline::Call(_, caller) => self.call(caller.clone()),
+                IRline::Return(val) => self.return_call(generator, val.clone()),
                 IRline::Print(val) => self.print(val.clone()),
-                IRline::Label(_) => {},
                 IRline::Jump(_) => {}
                 IRline::JumpIf(_, _) => {}
                 IRline::End => break,
+                IRline::Label(_) => panic!("label found while interpreting!"),
             }
 
             self.next();
         }
     }
 
-    fn return_call(&mut self, val: IRval) {
+    fn return_call(&mut self, generator: &Generator, val: IRval) {
+        let copy_val = self.get_copy_val(val.clone());
         self.position = self.stack.last().unwrap().return_loc;
+        let call_line = &generator.code[self.position];
         self.stack.pop();
+
+        //println!("TESTING");
+        //println!("CALL LINE: {:?}", call_line);
+        //println!("COPY VAL: {:?}", copy_val);
+        if let IRline::Call(IRval::Temp(id), _) = call_line {
+            //println!("TESTING");
+            let top_stack = self.stack.len() - 1;
+            self.stack[top_stack].temps.push((*id, copy_val));
+        }
     }
 
     fn call(&mut self, caller: IRval) {
@@ -124,12 +139,49 @@ impl Interpreter {
                 
                 self.stack[top_stack].syms.push((sym_id, copy_val));
             },
+            IRval::Temp(temp_id) => {
+                let top_stack = self.stack.len() - 1;
+                for temp_val in self.stack[top_stack].temps.iter_mut() {
+                    if temp_val.0 == temp_id {
+                        temp_val.1 = copy_val;
+                        return;
+                    }
+                }
+                
+                self.stack[top_stack].temps.push((temp_id, copy_val));
+            },
             _ => panic!("LOADING INTO NON SYM NON ARG LOCATION"),
         }
     }
 
     fn op(&mut self, result: IRval, op: IRop, left: IRval, right: IRval) {
+        let mut result_val = IRval::Nil;
+        let mut left_val = self.get_copy_val(left);
+        let mut right_val = self.get_copy_val(right);
+        match (left_val, right_val) {
+            (IRval::Int(left_int), IRval::Int(right_int)) => {
+                match op {
+                    IRop::Minus => result_val = IRval::Int(right_int - left_int),
+                    IRop::Plus => result_val = IRval::Int(left_int + right_int),
+                }
+            }
+            _ => {}
+        }
 
+        match result {
+            IRval::Temp(temp_id) => {
+                let top_stack = self.stack.len() - 1;
+                for temp_val in self.stack[top_stack].temps.iter_mut() {
+                    if temp_val.0 == temp_id {
+                        temp_val.1 = result_val;
+                        return;
+                    }
+                }
+                
+                self.stack[top_stack].temps.push((temp_id, result_val));
+            }
+            _ => {}
+        }
     }
 
     // this function takes an IRval and finds the under lying value to be copied

@@ -1,10 +1,10 @@
 fn testing() {
    test = "hello world! This is Chorus"
    print(test)
-   test()
+   nested_func()
 }
 
-fn test() {
+fn nested_func() {
    test = "im a nested func"
    print(test)
 }

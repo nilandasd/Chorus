@@ -126,6 +126,11 @@ impl Ast {
             _ => {}
         }
     }
+
+    pub fn clear(&mut self) {
+        self.node_stack.clear();
+        self.symbol_table.clear();
+    }
     
     pub fn new_node(&mut self, token: Tok, val: Option<NodeVal>) -> Node {
         self.node_counter += 1;

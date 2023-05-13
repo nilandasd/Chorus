@@ -108,7 +108,7 @@ impl Parser {
             } else {
                 match parse_result.ok().unwrap() {
                     ParseResult::Accept => {
-                        println!("==== PARSER ACCEPTED :) ====");
+                        //println!("==== PARSER ACCEPTED :) ====");
                         break;
                     }
                     ParseResult::Reduction(_, pid) => {

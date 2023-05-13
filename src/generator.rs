@@ -52,8 +52,7 @@ struct FuncDef {
 pub struct Generator {
     pub code: Vec<IRline>,
     funcs: Vec<FuncDef>,
-    func_stack: Vec<FnID>, // the top of the stack is the current function being defined
-    strings: Vec<String>,
+    func_stack: Vec<FnID>, // top of the stack is curr. function being defined
 }
 
 impl Generator {
@@ -62,7 +61,6 @@ impl Generator {
             code: vec![],
             funcs: vec![],
             func_stack: vec![],
-            strings: vec![]
         };
 
         generator.init_code();

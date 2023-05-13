@@ -3,6 +3,7 @@ use crate::generator::Generator;
 use crate::interpreter::Interpreter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use std::env;
 
 pub struct Chorus {
     lexer: Lexer,
@@ -26,9 +27,16 @@ impl Chorus {
     pub fn interpret(&mut self, file_path: &str) {
         self.lexer.open_file(file_path);
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
-        self.ast.display();
         self.ast.traverse(&mut self.generator);
-        self.generator.display();
+        // generator.optimize();
+
+        if env::var("DEBUG").is_ok() {
+            self.ast.display();
+            self.generator.display();
+        }
+
+        self.ast.clear();
+
         self.interpreter.run(&mut self.generator);
     }
 }

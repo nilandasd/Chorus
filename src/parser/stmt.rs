@@ -9,10 +9,10 @@ impl Parser {
             let var_list = ast.node_stack.pop().unwrap();
             let mut var = ast.node_stack.pop().unwrap();
 
-
             for child in stmts.children {
                 var.children.push(child);
             }
+
             var.children.push(var_list);
             var.token = Tok::FuncDecl;
             ast.node_stack.push(var);
