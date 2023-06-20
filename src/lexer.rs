@@ -2,6 +2,7 @@ use crate::tokens::{Tok, TokID};
 use lexify::{Lexify, LexifyError, LexifyToken};
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 
 pub struct Lexer {
     lexer: lexify::Lexify<BufReader<File>>,
@@ -17,8 +18,14 @@ impl Lexer {
         lexer
     }
 
-    pub fn next_token(&mut self) -> Result<LexifyToken, LexifyError> {
-        self.lexer.next_token()
+    pub fn next_token(&mut self) -> Result<LexifyToken, ()> {
+        match self.lexer.next_token() {
+            Ok(t) => Ok(t),
+            Err(lex_err) => {
+                // add lex error to errors
+                Err(())
+            }
+        }
     }
 
     fn new() -> Self {
@@ -27,16 +34,19 @@ impl Lexer {
         }
     }
 
-    pub fn open_file(&mut self, path: &str) {
+    pub fn open_file(&mut self, path: &str) -> Result<(), ()> {
         let f = File::open(path);
 
         if f.is_err() {
-            panic!("Unable to open file: {}", path);
+            println!("Unable to open file: {}", path);
+            return Err(());
         }
 
         let reader = BufReader::new(f.ok().unwrap());
 
         self.lexer.set_buf_reader(reader);
+
+        Ok(())
     }
 
     fn install_ignores(&mut self) {

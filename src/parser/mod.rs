@@ -2,7 +2,7 @@ use crate::ast::{Ast, NodeVal};
 use crate::lexer::Lexer;
 use crate::tokens::{keyword_check, tid_to_tok, Tok, TokID};
 use bovidae::{Bovidae, ParseResult};
-use lexify::LexifyToken;
+use lexify::{LexifyToken, LexifyError};
 
 pub mod var_list;
 pub mod binop;
@@ -34,21 +34,20 @@ impl Parser {
         }
     }
 
-    pub fn build_ast(&mut self, lexer: &mut Lexer, ast: &mut Ast) {
+    pub fn build_ast(&mut self, lexer: &mut Lexer, ast: &mut Ast) -> Result<(), ()> {
         loop {
-            let lex_tok = lexer.next_token().ok().unwrap();
-
-            //println!("{:?}", lex_tok);
+            let lex_tok = lexer.next_token()?;
 
             match lex_tok {
-                LexifyToken::Eof => self.parse_end(ast),
+                LexifyToken::Eof => {
+                    self.parse_end(ast);
+                    break;
+                }
                 LexifyToken::Tok(tid, attr) => self.parse(tid, attr, ast),
             }
-
-            if let LexifyToken::Eof = lex_tok {
-                break;
-            }
         }
+
+        Ok(())
     }
 
     fn shift_node(&mut self, tok: Tok, attr: Option<&str>, ast: &mut Ast) {

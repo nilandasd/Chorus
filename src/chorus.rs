@@ -25,7 +25,8 @@ impl Chorus {
     }
 
     pub fn interpret(&mut self, file_path: &str) {
-        self.lexer.open_file(file_path);
+        if self.lexer.open_file(file_path).is_err() { return; }
+
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
         self.ast.traverse(&mut self.generator);
         // generator.optimize();
@@ -34,6 +35,10 @@ impl Chorus {
             self.ast.display();
             self.generator.display();
         }
+
+        // if errors
+        //   display lex errors
+        //   display ast errors
 
         self.ast.clear();
 
