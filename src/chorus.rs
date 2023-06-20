@@ -1,8 +1,8 @@
 use crate::ast::Ast;
-use crate::generator::Generator;
-use crate::interpreter::Interpreter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::generator::Generator;
+
 use std::env;
 
 pub struct Chorus {
@@ -10,7 +10,7 @@ pub struct Chorus {
     parser: Parser,
     ast: Ast,
     generator: Generator,
-    interpreter: Interpreter,
+    // interpreter: Interpreter,
 }
 
 impl Chorus {
@@ -20,7 +20,6 @@ impl Chorus {
             parser: Parser::init(),
             ast: Ast::init(),
             generator: Generator::init(),
-            interpreter: Interpreter::init(),
         }
     }
 
@@ -33,7 +32,6 @@ impl Chorus {
 
         if env::var("DEBUG").is_ok() {
             self.ast.display();
-            self.generator.display();
         }
 
         // if errors
@@ -41,8 +39,6 @@ impl Chorus {
         //   display ast errors
 
         self.ast.clear();
-
-        self.interpreter.run(&mut self.generator);
     }
 }
 #[cfg(test)]

@@ -53,40 +53,12 @@ impl Node {
 
     fn preprocess_node(&mut self, generator: &mut Generator) {
         match self.token {
-            Tok::FuncDecl => {
-                generator.gen_func_enter(self);
-            }
-
-            // IF ELSE STMT --------
-            // label1 = id of child 1
-            // label2 = id of child 2
-            // gen expr
-            // gen JNE to label 1
-            // process child 1
-            // gen jump label2
-            // gen label1
-            // process child 2
-            // gen label2
-
-            // WHILE STMT --------
-            // gen label1
-            // JNE to label2
-            // process block
-            // jump to label 1
-            // label 2
-
             _ => {}
         }
     }
 
     fn process_node(&mut self, generator: &mut Generator) {
         match self.token {
-            Tok::Plus | Tok::Minus => generator.gen_expr(self),
-            Tok::Eq => generator.gen_decl(self),
-            Tok::FuncDecl => generator.gen_func_leave(),
-            Tok::FuncCall => generator.gen_func_call(self),
-            Tok::ReturnKW => generator.gen_return(self),
-            Tok::VarList => generator.gen_var_list(self),
             _ => {}
         }
     }
@@ -162,7 +134,7 @@ impl Ast {
 
     pub fn traverse(&mut self, generator: &mut Generator) {
         self.node_stack[0].traverse(generator);
-        generator.complete_generation();
+        // generator.complete_generation();
     }
 
     pub fn display(&self) {

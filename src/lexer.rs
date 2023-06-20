@@ -2,7 +2,6 @@ use crate::tokens::{Tok, TokID};
 use lexify::{Lexify, LexifyError, LexifyToken};
 use std::fs::File;
 use std::io::BufReader;
-use std::path::Path;
 
 pub struct Lexer {
     lexer: lexify::Lexify<BufReader<File>>,

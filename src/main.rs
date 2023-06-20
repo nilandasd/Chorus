@@ -2,7 +2,6 @@ mod ast;
 mod chorus;
 mod config;
 mod generator;
-mod interpreter;
 mod lexer;
 mod parser;
 mod tokens;
