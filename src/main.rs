@@ -11,6 +11,7 @@ mod constants;
 mod raw_ptr;
 mod allocator;
 mod heap;
+mod header;
 
 use crate::app::App;
 use crate::config::Config;
