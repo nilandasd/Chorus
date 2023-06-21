@@ -2,28 +2,31 @@ use crate::ast::Ast;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::generator::Generator;
+use crate::heap::Heap;
 
 use std::env;
 
-pub struct Chorus {
+pub struct App {
     lexer: Lexer,
     parser: Parser,
     ast: Ast,
     generator: Generator,
+    //heap: Heap,
     // interpreter: Interpreter,
 }
 
-impl Chorus {
+impl App {
     pub fn init() -> Self {
         Self {
             lexer: Lexer::init(),
             parser: Parser::init(),
             ast: Ast::init(),
             generator: Generator::init(),
+            //heap: Heap::default()
         }
     }
 
-    pub fn interpret(&mut self, file_path: &str) {
+    pub fn run(&mut self, file_path: &str) {
         if self.lexer.open_file(file_path).is_err() { return; }
 
         self.parser.build_ast(&mut self.lexer, &mut self.ast);
@@ -47,25 +50,25 @@ mod tests {
 
     #[test]
     fn first_words() {
-        let mut chorus = Chorus::init();
-        chorus.interpret("examples/first_words.ch");
+        let mut app = App::init();
+        app.run("examples/first_words.ch");
     }
 
     #[test]
     fn hello_world() {
-        let mut chorus = Chorus::init();
-        chorus.interpret("examples/hello_world.ch");
+        let mut app = App::init();
+        app.run("examples/hello_world.ch");
     }
 
     #[test]
     fn foobar() {
-        let mut chorus = Chorus::init();
-        chorus.interpret("examples/foobar.ch");
+        let mut app = App::init();
+        app.run("examples/foobar.ch");
     }
 
     #[test]
     fn numbers() {
-        let mut chorus = Chorus::init();
-        chorus.interpret("examples/numbers.ch");
+        let mut app = App::init();
+        app.run("examples/numbers.ch");
     }
 }

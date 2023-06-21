@@ -1,12 +1,18 @@
 mod ast;
-mod chorus;
+mod app;
 mod config;
 mod generator;
 mod lexer;
 mod parser;
 mod tokens;
+mod block;
+mod bump_block;
+mod constants;
+mod raw_ptr;
+mod allocator;
+mod heap;
 
-use crate::chorus::Chorus;
+use crate::app::App;
 use crate::config::Config;
 use std::env;
 use std::process;
@@ -22,7 +28,7 @@ fn main() {
 }
 
 fn run(config: &Config) {
-    let mut chorus = Chorus::init();
+    let mut app = App::init();
 
-    chorus.interpret(config.filename);
+    app.run(config.filename);
 }

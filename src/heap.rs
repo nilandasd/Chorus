@@ -100,14 +100,14 @@ impl BlockList {
     }
 }
 
-pub struct ZapHeap<H> {
+pub struct Heap<H> {
     blocks: UnsafeCell<BlockList>,
     _header_type: PhantomData<*const H>,
 }
 
-impl<H> ZapHeap<H> {
-    pub fn new() -> ZapHeap<H> {
-        ZapHeap {
+impl<H> Heap<H> {
+    pub fn new() -> Heap<H> {
+        Heap {
             blocks: UnsafeCell::new(BlockList::new()),
             _header_type: PhantomData,
         }
@@ -167,7 +167,7 @@ impl<H> ZapHeap<H> {
     }
 }
 
-impl<H: AllocHeader> AllocRaw for ZapHeap<H> {
+impl<H: AllocHeader> AllocRaw for Heap<H> {
     type Header = H;
 
     fn alloc<T>(&self, object: T) -> Result<RawPtr<T>, AllocError>
@@ -223,9 +223,9 @@ impl<H: AllocHeader> AllocRaw for ZapHeap<H> {
     }
 }
 
-impl<H> Default for ZapHeap<H> {
-    fn default() -> ZapHeap<H> {
-        ZapHeap::new()
+impl<H> Default for Heap<H> {
+    fn default() -> Heap<H> {
+        Heap::new()
     }
 }
 
@@ -327,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_alloc_small_obj() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let ptr = heap.alloc(small_obj);
         let small_obj_copy = unsafe { &*(ptr.unwrap().as_ptr()) };
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_alloc_many_small_obj() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<SmallTestObj>();
 
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_small_obj_header() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let raw_ptr = heap.alloc(small_obj).unwrap();
         let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn test_get_object() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let raw_ptr = heap.alloc(small_obj).unwrap();
         let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_alloc_medium_object() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let small_obj = MediumTestObj { data: [9; 256] };
         let raw_ptr = heap.alloc(small_obj).unwrap();
         let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     fn test_over_flow_alloc() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<MediumTestObj>();
 
@@ -443,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_use_recycling() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<MediumTestObj>();
 
@@ -493,7 +493,7 @@ mod tests {
 
     #[test]
     fn test_array_alloc() {
-        let heap = ZapHeap::<TestHeader>::new();
+        let heap = Heap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = size_of::<MediumTestObj>() as u32;
         let raw_ptr = heap.alloc_array(alloc_size as u32).unwrap();
