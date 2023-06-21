@@ -1,7 +1,9 @@
+use crate::memory::Memory;
+use crate::ptr_ops::AsNonNull;
 use crate::allocator::{
-    AllocHeader, AllocObject, AllocRaw, AllocTypeId, ArraySize, Mark, RawPtr, SizeClass,
+    AllocHeader, AllocObject, AllocTypeId, ArraySize, Mark, SizeClass,
 };
-
+use crate::raw_ptr::RawPtr;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -19,7 +21,6 @@ pub enum TypeList {
     List,
     NumberObject,
     Pair,
-    Partial,
     Symbol,
     Text,
     Thread,
@@ -38,23 +39,9 @@ pub struct ObjectHeader {
 impl ObjectHeader {
     pub unsafe fn get_object_fatptr(&self) -> FatPtr {
         let ptr_to_self = self.non_null_ptr();
-        let object_addr = HeapStorage::get_object(ptr_to_self);
+        let object_addr = Memory::get_object(ptr_to_self);
 
         match self.type_id {
-            TypeList::ArrayU8 => FatPtr::ArrayU8(RawPtr::untag(object_addr.cast::<ArrayU8>())),
-            TypeList::ArrayU16 => FatPtr::ArrayU16(RawPtr::untag(object_addr.cast::<ArrayU16>())),
-            TypeList::ArrayU32 => FatPtr::ArrayU32(RawPtr::untag(object_addr.cast::<ArrayU32>())),
-            TypeList::Dict => FatPtr::Dict(RawPtr::untag(object_addr.cast::<Dict>())),
-            TypeList::Function => FatPtr::Function(RawPtr::untag(object_addr.cast::<Function>())),
-            TypeList::List => FatPtr::List(RawPtr::untag(object_addr.cast::<List>())),
-            TypeList::NumberObject => {
-                FatPtr::NumberObject(RawPtr::untag(object_addr.cast::<NumberObject>()))
-            }
-            TypeList::Pair => FatPtr::Pair(RawPtr::untag(object_addr.cast::<Pair>())),
-            TypeList::Partial => FatPtr::Partial(RawPtr::untag(object_addr.cast::<Partial>())),
-            TypeList::Symbol => FatPtr::Symbol(RawPtr::untag(object_addr.cast::<Symbol>())),
-            TypeList::Text => FatPtr::Text(RawPtr::untag(object_addr.cast::<Text>())),
-            TypeList::Upvalue => FatPtr::Upvalue(RawPtr::untag(object_addr.cast::<Upvalue>())),
 
             _ => panic!("Invalid ObjectHeader type tag {:?}!", self.type_id),
         }
@@ -109,7 +96,6 @@ impl AllocHeader for ObjectHeader {
     }
 }
 
-/// Apply the type ID to each native type
 macro_rules! declare_allocobject {
     ($T:ty, $I:tt) => {
         impl AllocObject<TypeList> for $T {
