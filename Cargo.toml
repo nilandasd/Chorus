@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 bovidae = "0.2.3"
-lexify = "0.1.5"
+lexify = "0.1.6"
+fnv = "1.0.3"
+itertools = "0.9"

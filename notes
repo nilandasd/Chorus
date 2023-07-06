@@ -1,0 +1,90 @@
+1. add lexical errors
+  - show the line the error was on
+  - print that line
+  - highlight the bad symbol
+
+2. add parser errors
+  - show the line that the error was on
+  - print the line
+  - print what the parser was expecting?
+
+3. add lists
+  - list initialization
+  - list indexing
+  - builtin list functions
+    - pop
+    - push
+    - clear
+    - concat
+  - printing a list
+  - printing a list
+
+4. add objects
+
+5. add runtime errors
+
+6. fix the vm!
+
+7. change the generator
+
+START : STMTS 
+
+STMTS :
+  STMT STMTS
+  EMPTY
+
+BLOCK :
+  { STMTS }
+
+STMT :
+  CONTROL
+  DECL
+  EXPR ;
+
+CONTROL :
+  IF EXPR STMTS
+  IF EXPR STMTS ELSE STMTS
+  WHILE EXPR STMTS
+  BREAK ;
+  CONTINUE ;
+  RETURN ;
+  RETURN EXPR ;
+
+DECL :
+  VAR = EXPR ;
+  FUNC VAR ( ARGS ) BLOCK
+
+EXPR :
+  ( EXPR )
+  BINOP EXPR
+  EXPR OP EXPR
+  EXPR ( PARAMS )
+  EXPR [ EXPR ]
+  VAL
+
+VALUE :
+  NUM 
+  VAR
+  STRING
+  OBJECT
+  LIST
+  FUNCDECL
+
+LIST :
+  [ LIST_ITEMS ]
+
+OBJECT :
+  { OBJECT_ITEMS }
+
+OBJECT_ITEMS :
+  OBJECT_ITEM , OBJECT_ITEMS
+  VAR : VALUE
+  EMPTY
+
+LIST_ITEMS :
+  VALUE , LIST_ITEMS
+  VALUE
+  EMPTY
+
+OP :
+  - + * / && || == != % .

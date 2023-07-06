@@ -35,8 +35,8 @@ pub trait AllocRaw {
     where
         T: AllocObject<<Self::Header as AllocHeader>::TypeId>;
     fn alloc_array(&self, size_bytes: ArraySize) -> Result<RawPtr<u8>, AllocError>;
-    fn get_header(&self, object: NonNull<()>) -> NonNull<Self::Header>;
-    fn get_object(&self, header: NonNull<Self::Header>) -> NonNull<()>;
+    fn get_header(object: NonNull<()>) -> NonNull<Self::Header>;
+    fn get_object(header: NonNull<Self::Header>) -> NonNull<()>;
 }
 
 #[repr(u8)]

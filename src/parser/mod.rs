@@ -1,6 +1,6 @@
 use crate::ast::{Ast, NodeVal};
 use crate::lexer::Lexer;
-use crate::tokens::{keyword_check, tid_to_tok, Tok, TokID};
+use crate::tokens::{keyword_check, Tok};
 use bovidae::{Bovidae, ParseResult};
 use lexify::{LexifyToken, LexifyError};
 
@@ -12,8 +12,10 @@ pub mod expr_list;
 pub mod stmt;
 pub mod stmts;
 pub mod call;
+pub mod decl;
 
 type ProdID = usize;
+
 pub struct Parser {
     parser: Bovidae,
     reduction_actions: Vec<Option<fn(&mut Ast)>>,
@@ -81,24 +83,24 @@ impl Parser {
         }
     }
 
-    fn process_raw_tid(&self, raw_tid: TokID, attr: Option<&str>) -> TokID {
-        match tid_to_tok(raw_tid) {
+    fn process_raw_tid(&self, raw_tid: Tok, attr: Option<&str>) -> Tok {
+        match raw_tid {
             Tok::Var => {
                 if let Some(keyword) = keyword_check(attr.unwrap()) {
-                    keyword as TokID
-                } else {
-                    Tok::Var as TokID
+                    return keyword;
                 }
+
+                Tok::Var
             }
             _ => raw_tid,
         }
     }
 
-    pub fn parse(&mut self, raw_tid: TokID, attr: Option<&str>, ast: &mut Ast) {
+    pub fn parse(&mut self, raw_tid: Tok, attr: Option<&str>, ast: &mut Ast) {
         self.parse_until_shift(Some(self.process_raw_tid(raw_tid, attr)), attr, ast);
     }
 
-    fn parse_until_shift(&mut self, tid: Option<TokID>, attr: Option<&str>, ast: &mut Ast) {
+    fn parse_until_shift(&mut self, tid: Option<Tok>, attr: Option<&str>, ast: &mut Ast) {
         loop {
             let parse_result = self.parser.parse(tid);
 
@@ -117,7 +119,7 @@ impl Parser {
                         continue;
                     }
                     ParseResult::Shift => {
-                        self.shift_node(tid_to_tok(tid.unwrap()), attr, ast);
+                        self.shift_node(tid.unwrap(), attr, ast);
                         break;
                     }
                 }
@@ -126,57 +128,39 @@ impl Parser {
     }
 
     fn parse_end(&mut self, ast: &mut Ast) {
-        self.parse_until_shift(Some(Tok::End as TokID), None, ast);
+        self.parse_until_shift(Some(Tok::End), None, ast);
         self.parse_until_shift(None, None, ast);
     }
 
     pub fn install_prod(&mut self, head: Tok, body: &Vec<Tok>, action: Option<fn(&mut Ast)>) {
-        let tok_id_body = body.iter().map(|tok| *tok as TokID).collect();
+        let tok_id_body = body.iter().collect();
 
         self.reduction_actions.push(action);
 
-        self.parser.set_prod(head as TokID, &tok_id_body)
+        self.parser.set_prod(head, &tok_id_body)
     }
 
     fn install_prods(&mut self) {
         // start
-        self.install_start();
+        self.install_start(); // START => STMTS
 
         // stmts
-        self.install_stmts_list();
-        self.install_stmts_last();
+        self.install_stmts_list(); // STMTS => STMT STMTS
+        self.install_stmts_empty(); // STMTS => EMPTY
 
         // block
-        self.install_block();
+        self.install_block(); // Block => { Stmts }
 
         // stmt
-        self.install_stmt_func_decl();
-        self.install_stmt_var_decl();
-        self.install_stmt_call();
-        self.install_stmt_return();
+        self.install_stmt_decl(); // STMT => DECL
+        self.install_stmt_control(); // STMT => CONTROL
+        self.install_stmt_expr(); // STMT => EXPR ;
 
-        // Expr List
-        self.install_expr_list_comma();
-        self.install_expr_list_last();
-        self.install_expr_list_empty();
+        // DECL
+        self.install_decl_var();
+        self.install_decl_func();
 
-        // Arg List
-        self.install_arg_list_comma();
-        self.install_arg_list_last();
-        self.install_arg_list_empty();
+        // CONTROL
 
-        // Expr
-        self.install_expr_call();
-        self.install_expr_nested();
-        self.install_expr_binop();
-        self.install_expr_string();
-        self.install_expr_int();
-        self.install_expr_var();
-
-        // func call
-        self.install_call();
-
-        // binop
-        self.install_binops();
     }
 }

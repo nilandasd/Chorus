@@ -19,7 +19,7 @@ impl Parser {
         self.install_prod(Tok::Stmts, &vec![Tok::Stmt, Tok::Stmts], Some(action));
     }
 
-    pub fn install_stmts_last(&mut self) {
+    pub fn install_stmts_empty(&mut self) {
         fn action(ast: &mut Ast) {
             ast.push_node(Tok::Stmts, None);
         }

@@ -2,7 +2,6 @@ use crate::ast::Ast;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::generator::Generator;
-use crate::heap::Heap;
 
 use std::env;
 

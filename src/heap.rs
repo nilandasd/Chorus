@@ -100,14 +100,14 @@ impl BlockList {
     }
 }
 
-pub struct Heap<H> {
+pub struct ImmixHeap<H> {
     blocks: UnsafeCell<BlockList>,
     _header_type: PhantomData<*const H>,
 }
 
-impl<H> Heap<H> {
-    pub fn new() -> Heap<H> {
-        Heap {
+impl<H> ImmixHeap<H> {
+    pub fn new() -> ImmixHeap<H> {
+        ImmixHeap {
             blocks: UnsafeCell::new(BlockList::new()),
             _header_type: PhantomData,
         }
@@ -167,7 +167,7 @@ impl<H> Heap<H> {
     }
 }
 
-impl<H: AllocHeader> AllocRaw for Heap<H> {
+impl<H: AllocHeader> AllocRaw for ImmixHeap<H> {
     type Header = H;
 
     fn alloc<T>(&self, object: T) -> Result<RawPtr<T>, AllocError>
@@ -214,18 +214,18 @@ impl<H: AllocHeader> AllocRaw for Heap<H> {
         }
     }
 
-    fn get_header(&self, object: NonNull<()>) -> NonNull<Self::Header> {
+    fn get_header(object: NonNull<()>) -> NonNull<Self::Header> {
         unsafe { NonNull::new_unchecked(object.cast::<Self::Header>().as_ptr().offset(-1)) }
     }
 
-    fn get_object(&self, header: NonNull<Self::Header>) -> NonNull<()> {
+    fn get_object(header: NonNull<Self::Header>) -> NonNull<()> {
         unsafe { NonNull::new_unchecked(header.as_ptr().offset(1).cast::<()>()) }
     }
 }
 
-impl<H> Default for Heap<H> {
-    fn default() -> Heap<H> {
-        Heap::new()
+impl<H> Default for ImmixHeap<H> {
+    fn default() -> ImmixHeap<H> {
+        ImmixHeap::new()
     }
 }
 
@@ -327,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_alloc_small_obj() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let ptr = heap.alloc(small_obj);
         let small_obj_copy = unsafe { &*(ptr.unwrap().as_ptr()) };
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_alloc_many_small_obj() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<SmallTestObj>();
 
@@ -371,11 +371,11 @@ mod tests {
 
     #[test]
     fn test_small_obj_header() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let raw_ptr = heap.alloc(small_obj).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-        let header = unsafe { &*header_ptr.as_ptr() };
+        let header_ptr = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+        let header: &TestHeader  = unsafe { &*header_ptr.as_ptr() };
 
         assert!(header.type_id == TestTypeId::Small);
         assert!(header.size == size_of::<SmallTestObj>() as u32);
@@ -385,11 +385,11 @@ mod tests {
 
     #[test]
     fn test_get_object() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let small_obj = SmallTestObj { data: 333};
         let raw_ptr = heap.alloc(small_obj).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-        let obj_ptr = heap.get_object(header_ptr);
+        let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+        let obj_ptr = ImmixHeap::get_object(header_ptr);
         let obj = unsafe { &*(obj_ptr.as_ptr() as *const SmallTestObj) };
 
         assert!(obj.data == 333);
@@ -397,11 +397,11 @@ mod tests {
 
     #[test]
     fn test_alloc_medium_object() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let small_obj = MediumTestObj { data: [9; 256] };
         let raw_ptr = heap.alloc(small_obj).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-        let obj_ptr = heap.get_object(header_ptr);
+        let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+        let obj_ptr = ImmixHeap::get_object(header_ptr);
         let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
         assert!(obj.data == [9; 256]);
@@ -409,15 +409,15 @@ mod tests {
 
     #[test]
     fn test_over_flow_alloc() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<MediumTestObj>();
 
         for _ in 0..(constants::BLOCK_CAPACITY / alloc_size) {
             let medium_obj = MediumTestObj { data: [9; 256] };
             let raw_ptr = heap.alloc(medium_obj).unwrap();
-            let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-            let obj_ptr = heap.get_object(header_ptr);
+            let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+            let obj_ptr = ImmixHeap::get_object(header_ptr);
             let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
             assert!(obj.data == [9; 256]);
@@ -430,8 +430,8 @@ mod tests {
 
         let medium_obj = MediumTestObj { data: [9; 256] };
         let raw_ptr = heap.alloc(medium_obj).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-        let obj_ptr = heap.get_object(header_ptr);
+        let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+        let obj_ptr = ImmixHeap::get_object(header_ptr);
         let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
         assert!(obj.data == [9; 256]);
@@ -443,15 +443,15 @@ mod tests {
 
     #[test]
     fn test_use_recycling() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = alloc_size::<MediumTestObj>();
 
         for _ in 0..(constants::BLOCK_CAPACITY / alloc_size) {
             let medium_obj = MediumTestObj { data: [9; 256] };
             let raw_ptr = heap.alloc(medium_obj).unwrap();
-            let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-            let obj_ptr = heap.get_object(header_ptr);
+            let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+            let obj_ptr = ImmixHeap::get_object(header_ptr);
             let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
             assert!(obj.data == [9; 256]);
@@ -465,8 +465,8 @@ mod tests {
         for _ in 0..(constants::BLOCK_CAPACITY / alloc_size) {
             let medium_obj = MediumTestObj { data: [9; 256] };
             let raw_ptr = heap.alloc(medium_obj).unwrap();
-            let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-            let obj_ptr = heap.get_object(header_ptr);
+            let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+            let obj_ptr = ImmixHeap::get_object(header_ptr);
             let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
             assert!(obj.data == [9; 256]);
@@ -479,8 +479,8 @@ mod tests {
 
         let medium_obj = MediumTestObj { data: [9; 256] };
         let raw_ptr = heap.alloc(medium_obj).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
-        let obj_ptr = heap.get_object(header_ptr);
+        let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
+        let obj_ptr = ImmixHeap::get_object(header_ptr);
         let obj = unsafe { &*(obj_ptr.as_ptr() as *const MediumTestObj) };
 
         assert!(obj.data == [9; 256]);
@@ -493,11 +493,11 @@ mod tests {
 
     #[test]
     fn test_array_alloc() {
-        let heap = Heap::<TestHeader>::new();
+        let heap = ImmixHeap::<TestHeader>::new();
         let blocks = unsafe { &mut *heap.blocks.get() };
         let alloc_size = size_of::<MediumTestObj>() as u32;
         let raw_ptr = heap.alloc_array(alloc_size as u32).unwrap();
-        let header_ptr = heap.get_header(raw_ptr.as_untyped()); 
+        let header_ptr: NonNull<TestHeader> = ImmixHeap::get_header(raw_ptr.as_untyped()); 
         let header = unsafe { &*header_ptr.as_ptr() };
 
         assert!(header.type_id == TestTypeId::Array);
