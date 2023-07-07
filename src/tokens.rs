@@ -7,11 +7,18 @@ pub enum Tok {
     Stmts,
     Stmt,
 
+    Block,
+
+    Expr,
+
+    FuncDecl,
     Decl,
     Control,
 
     End,
 
+    FnKW,
+    VarList,
 
     Var,
     Int,

@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "bovidae"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1748a32ba3923568f17ac2ed3b72751c8a4e42fa86720c7fabf116084d9f654"
+checksum = "28d0115681e9794c87c9e2022e3b663f67dad1ec9333eeaf0d031b2072196ec5"
 
 [[package]]
 name = "chomper"

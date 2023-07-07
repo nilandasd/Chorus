@@ -4,20 +4,20 @@ use crate::tokens::{keyword_check, Tok};
 use bovidae::{Bovidae, ParseResult};
 use lexify::{LexifyToken, LexifyError};
 
-pub mod var_list;
-pub mod binop;
-pub mod block;
-pub mod expr;
-pub mod expr_list;
-pub mod stmt;
+//pub mod var_list;
+//pub mod binop;
+//pub mod expr;
+//pub mod expr_list;
 pub mod stmts;
-pub mod call;
+pub mod block;
+pub mod stmt;
 pub mod decl;
+//pub mod call;
 
 type ProdID = usize;
 
 pub struct Parser {
-    parser: Bovidae,
+    parser: Bovidae<Tok>,
     reduction_actions: Vec<Option<fn(&mut Ast)>>,
 }
 
@@ -133,34 +133,49 @@ impl Parser {
     }
 
     pub fn install_prod(&mut self, head: Tok, body: &Vec<Tok>, action: Option<fn(&mut Ast)>) {
-        let tok_id_body = body.iter().collect();
-
         self.reduction_actions.push(action);
-
-        self.parser.set_prod(head, &tok_id_body)
+        self.parser.set_prod(head, body)
     }
 
     fn install_prods(&mut self) {
-        // start
-        self.install_start(); // START => STMTS
+        // START
+        self.install_start();       // START => STMTS
 
-        // stmts
-        self.install_stmts_list(); // STMTS => STMT STMTS
+        // STMTS
+        self.install_stmts_list();  // STMTS => STMT STMTS
         self.install_stmts_empty(); // STMTS => EMPTY
 
-        // block
-        self.install_block(); // Block => { Stmts }
+        // BLOCK
+        self.install_block();       // BLOCK => { STMTS }
 
-        // stmt
-        self.install_stmt_decl(); // STMT => DECL
-        self.install_stmt_control(); // STMT => CONTROL
-        self.install_stmt_expr(); // STMT => EXPR ;
+        // STMT
+        self.install_stmt_decl();   // STMT => DECL
+        self.install_stmt_control();// STMT => CONTROL
+        self.install_stmt_expr();   // STMT => EXPR ;
 
         // DECL
-        self.install_decl_var();
-        self.install_decl_func();
+        self.install_decl_var();    // DECL => VAR = EXPR ;
+        self.install_decl_func();   // DECL => FN_KW VAR ( PARAMS ) BLOCK
 
         // CONTROL
-
+        // self.install_if();          // CONTROL => IF_KW EXPR BLOCK
+        // self.install_if_else();     // CONTROL => IF_KW EXPR BLOCK ELSE BLOCK
+        // self.install_while();       // CONTROL => WHILE_KW EXPR BLOCK
+        // self.install_continue();    // CONTROL => CONTINUE_KW
+        // self.install_return();      // CONTROL => RETURN EXPRLIST
+        
+        // EXPR
+        // self.install_if();          // CONTROL => IF_KW EXPR BLOCK
+        // self.install_if_else();     // CONTROL => IF_KW EXPR BLOCK ELSE BLOCK
+        // self.install_while();       // CONTROL => WHILE_KW EXPR BLOCK
+        // self.install_continue();    // CONTROL => CONTINUE_KW
+        // self.install_return();      // CONTROL => RETURN EXPRLIST
+        //
+        //
+        // EXPRLIST
+        //
+        // PARAMS
+        //
+        // VALUE
     }
 }
